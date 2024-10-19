@@ -316,14 +316,14 @@ class Dog_Watcher():
                 print(f"not_value = {not_value}")
                 normal_op = np.nansum(not_value)>= self.minimum_sample
                 # We need to check for each 
-                for sensor_property in properties:
+                for property in properties:
                     # To save the last sensors reading.
                     # This is not to use more than 1 check if there is enough non nan-data to make a correct average.    
                     if  not normal_op:
-                        virtual_sensor.avg_prop[sensor_property] = [np.nan]
+                        virtual_sensor.avg_prop[property] = [np.nan]
                     elif normal_op:
-                        # The axis is for making the mean for each row, not column.
-                        virtual_sensor.avg_prop[sensor_property] = [np.nanmean(virtual_sensor.avg_prop[sensor_property],axis = 1)]
+                            # The axis is for making the mean for each row, not column.
+                        virtual_sensor.avg_prop[property] = [np.nanmean(virtual_sensor.avg_prop[property])]
             
     def save_data(self):
         with FileManager(self.full_path_file).append() as xfile:
@@ -420,7 +420,8 @@ class Sensor():
     
     def trigger(self):
         for set_fun in self.all_set_fun:
-            self.all_properties_values.append(set_fun())
+            #We are going to round it to round it to two places
+            self.all_properties_values.append(round(set_fun(),2)) 
             
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
