@@ -569,7 +569,3 @@ if __name__ == "__main__":
             
     except KeyboardInterrupt:
         print("Exiting...")
-
-
-# Add more information.
-# New lines
