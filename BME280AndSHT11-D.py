@@ -353,7 +353,7 @@ class Dog_Watcher():
                     if self.average_bool:
                         self.trigger_number = int(0)
                         self.start_time_average = self.current_time
-                        self.set_avg_prop()
+                        self.#We are going to round it to ()
                         # Convert `average_5min` to a string format suitable for CSV, handling NaN values properly
                         self.join_fun()
                         self.print_values('Average')
