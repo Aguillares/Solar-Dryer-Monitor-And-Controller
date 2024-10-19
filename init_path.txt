@@ -1,0 +1,3 @@
+D:\Users\perro\Thesis
+Sensors_data.cvsThis another line
+ Good line
