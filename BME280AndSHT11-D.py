@@ -572,6 +572,10 @@ if __name__ == "__main__":
 
 
 # Add more information.
+<<<<<<< HEAD
 
 
 # Asking questions.
+=======
+# New lines
+>>>>>>> a35a7904c85c782caa9069233f262db2c1811939
