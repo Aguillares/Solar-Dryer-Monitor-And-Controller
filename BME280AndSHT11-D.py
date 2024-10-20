@@ -323,7 +323,7 @@ class Dog_Watcher():
                         virtual_sensor.avg_prop[sensor_property] = [np.nan]
                     elif normal_op:
                         # The axis is for making the mean for each row, not column.
-                        virtual_sensor.avg_prop[sensor_property] = [np.nanmean(virtual_sensor.avg_prop[sensor_property],axis = 1)]
+                        virtual_sensor.avg_prop[sensor_property] = [np.nanmean(virtual_sensor.avg_prop[sensor_property])]
             
     def save_data(self):
         with FileManager(self.full_path_file).append() as xfile:
@@ -569,13 +569,3 @@ if __name__ == "__main__":
             
     except KeyboardInterrupt:
         print("Exiting...")
-
-
-# Add more information.
-<<<<<<< HEAD
-
-
-# Asking questions.
-=======
-# New lines
->>>>>>> a35a7904c85c782caa9069233f262db2c1811939
