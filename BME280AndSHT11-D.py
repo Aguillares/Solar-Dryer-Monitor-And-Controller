@@ -266,7 +266,7 @@ class Dog_Watcher():
                     values.append(virtual_sensor.avg_prop[property][self.trigger_number])
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
-                print(f"{str(values)[1:-1]}",end=' ')
+                print(f"{values}",end=' ')
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
@@ -371,8 +371,9 @@ class Dog_Watcher():
             for virtual_sensor in self.control_center[type]:
                 for value in virtual_sensor.avg_prop.values():
                     self.results_avg.append(value[0])
-        self.results_avg = str(self.results_avg)
+        #self.results_avg = str(self.results_avg)
         print(self.results_avg)
+        print(type(self.results_avg))
 
 class Sensor():
     def __init__(self,sensor,type):
