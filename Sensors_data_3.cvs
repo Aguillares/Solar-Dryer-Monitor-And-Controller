@@ -1,8 +1,0 @@
-Day,Month,Year,Time,SHT31_1_1_T,SHT31_1_1_RH
-20,Oct,2024,12:53:48,[np.float64(20.3)], [np.float64(73.95)]
-20,Oct,2024,12:53:58,[np.float64(20.3)], [np.float64(73.95)]
-20,Oct,2024,12:54:08,[np.float64(20.3)], [np.float64(73.95)]
-20,Oct,2024,12:54:18,[np.float64(20.3)], [np.float64(73.95)]
-20,Oct,2024,12:54:28,[np.float64(20.3)], [np.float64(73.95)]
-20,Oct,2024,12:54:38,[np.float64(20.3)], [np.float64(73.95)]
-20,Oct,2024,12:54:48,[np.float64(20.3)], [np.float64(73.95)]
