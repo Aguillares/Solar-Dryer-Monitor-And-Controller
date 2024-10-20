@@ -141,31 +141,31 @@ class Dog_Watcher():
                                 added_BME280[0] = True
                                 virtual_sensor = BME280(self.tca,channel,address)
                                 self.virtual_sensor_creation(virtual_sensor,channel,number_BME280)
-                                number_BME280 += number_BME280
+                                number_BME280 = number_BME280+1
                                 
                             elif hex(address) == hex(0x77) and not added_BME280[1]:
                                 added_BME280[1] = True
                                 virtual_sensor = BME280(self.tca,channel,address)
                                 self.virtual_sensor_creation(virtual_sensor,channel,number_BME280)
-                                number_BME280 += number_BME280
+                                number_BME280 += number_BME280+1
 
                             elif hex(address) == hex(0x44) and not added_SHT31[0]:
                                 added_SHT31[0] = True
                                 virtual_sensor = SHT31(self.tca,channel,address)
                                 self.virtual_sensor_creation(virtual_sensor,channel,number_SHT31)
-                                number_SHT31 += number_SHT31
+                                number_SHT31 = number_SHT31+1
 
                             elif hex(address) == hex(0x45) and not added_SHT31[1]:
                                 added_SHT31[1] = True
                                 virtual_sensor = SHT31(self.tca,channel,address)
                                 self.virtual_sensor_creation(virtual_sensor,channel,number_SHT31)
-                                number_SHT31 += number_SHT31
+                                number_SHT31 = number_SHT31+1
 
                             elif hex(address) == hex(0x5A) and not added_MLX:
                                 added_MLX = True
                                 virtual_sensor = MLX(self.tca,channel,address)
                                 self.virtual_sensor_creation(virtual_sensor,channel,number_MLX)
-                                number_MLX += number_MLX
+                                number_MLX = number_MLX+1
 
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
@@ -306,15 +306,8 @@ class Dog_Watcher():
             for virtual_sensor in self.control_center[type]:
                 properties = virtual_sensor.get_properties()
                 prop = properties[0]
-                print(f"prop = {prop}")
-                avg_prop=virtual_sensor.avg_prop[prop]
-                print(f"avg_prop = {avg_prop}")
                 # If one average value doesn't work, none of the others work. They are not useful.
-                nan_value = np.isnan(avg_prop)
-                print(f"avg_prop = {nan_value}")
-                not_value = np.invert(nan_value)
-                print(f"not_value = {not_value}")
-                normal_op = np.nansum(not_value)>= self.minimum_sample
+                normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self.minimum_sample
                 # We need to check for each 
                 for property in properties:
                     # To save the last sensors reading.
@@ -372,11 +365,12 @@ class Dog_Watcher():
                         print("---------------------------------\n")
                     
     def join_fun(self):
-        self.results_avg = ''
+        self.results_avg = []
         for type in self.connected_sensors:
             for virtual_sensor in self.control_center[type]:
-                for property in virtual_sensor.get_properties():
-                        self.results_avg = ",".join([str(data) for data in virtual_sensor.avg_prop[property]])
+                self.results_avg.append(virtual_sensor.avg_prop[property])
+        self.results_avg = str(self.results_avg)[1:-1]
+        print(self.results_avg)
 
 class Sensor():
     def __init__(self,sensor,type):
