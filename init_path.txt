@@ -1,3 +1,2 @@
-D:\Users\perro\Thesis
-Sensors_data.cvsThis another line
- Good line
+/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller
+Sensors_data.cvs

@@ -26,8 +26,8 @@ class Dog_Watcher():
         self.connected_sensors = ['BME280','SHT31','MLX90614']
         # You need to change your initial path
         self.slash = '/'
-        self.init_path = r"/home/raspberrypi2/Desktop/Sketches/init_path.txt"
-        self.extension ='.txt' 
+        self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
+        self.extension ='.cvs' 
         self.attempt_init = 1
         self.first_check = False
         
@@ -340,8 +340,6 @@ class Dog_Watcher():
                 self.elapsed_time_average=int(self.current_time-self.start_time_average)
                 self.trigger_bool = self.elapsed_time_trigger>=self.display_trigger 
                 self.average_bool = self.elapsed_time_average>=self.average_trigger
-                print(f"Elapsed time trigger = {self.elapsed_time_trigger}")
-                print(f"Elapsed time average = {self.elapsed_time_average}")
                 
                 if  self.trigger_bool or self.average_bool or first:
                     first = False
@@ -369,7 +367,7 @@ class Dog_Watcher():
                         print("Saving data in memory",end="")
                         for i in range(5):
                             print(".",end="")
-                            time.sleep(0.075)
+                            time.sleep(0.2)
                         print()
                         print("---------------------------------\n")
                     
