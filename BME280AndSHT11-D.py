@@ -368,7 +368,8 @@ class Dog_Watcher():
         self.results_avg = []
         for type in self.connected_sensors:
             for virtual_sensor in self.control_center[type]:
-                self.results_avg.append(virtual_sensor.avg_prop[property])
+                for value in virtual_sensor.avg_prop.values():
+                    self.results_avg.append(value)
         self.results_avg = str(self.results_avg)[1:-1]
         print(self.results_avg)
 
