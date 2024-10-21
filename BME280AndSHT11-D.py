@@ -66,8 +66,8 @@ class Dog_Watcher():
             return  # To finish before going next, just the original has to continue.
         
         new = True
-        self.display_trigger = 5    # 5 seconds
-        self.average_trigger = 0*60+ 2*5  # 5 min
+        self.display_trigger = 10    # 5 seconds
+        self.average_trigger = 5*60+ 0*5  # 5 min
         self.minimum_sample = int((self.average_trigger/self.display_trigger + 1)*0.8) # To have at least 80% of the data.
         self.header = "Day,Month,Year,Time"
         print(f"Header = {self.header}")
@@ -127,16 +127,13 @@ class Dog_Watcher():
                 # This is part is to lock a specific channel, and to scan that one only.
                 if self.tca[channel].try_lock():
                     addresses = self.tca[channel].scan()
-                    print(f"Addresses = {addresses}")
-                    print(f"Channel = {channel}")
-                    
+                   
                     #After it is scanned we are going to unlock it again, to let communation flow later
                     self.tca[channel].unlock()
                     try:
                         # We have different addresses according to the sensor.
                         for address in addresses:
-                            print(f"Addresses = {hex(address)}")
-                            print(f"Channel = {channel}")
+                            
                             if hex(address) == hex(0x76) and not added_BME280[0]:
                                 added_BME280[0] = True
                                 virtual_sensor = BME280(self.tca,channel,address)
@@ -174,9 +171,9 @@ class Dog_Watcher():
     
     def virtual_sensor_creation(self,virtual_sensor,channel,number):
         virtual_sensor.set_port(channel+1)
-        print(f"Port = {virtual_sensor.get_port()}")
+        
         virtual_sensor.set_number(number)
-        print(f"Sensor number = {virtual_sensor.get_number()}")
+        
         self.add_sensors(virtual_sensor)
 
     def add_sensors(self,virtual_sensor):
@@ -185,15 +182,15 @@ class Dog_Watcher():
 
     def remove_sensors(self):
         inter_var = self.connected_sensors.copy()
-        print(f"Connected sensors: {inter_var}")
+        
         for type in inter_var:
-            print(f"{type}")
             if self.control_center[type+'_number'] > 0:
                 print(f"{self.control_center[type+'_number']} " + type + ' connected')
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array there are ones in deed.
                 del self.connected_sensors[self.connected_sensors.index(type)]
-            print(f"Connected sensors: {self.connected_sensors}")
+            
+            time.sleep(2)
             
 
     def set_full_path_file(self,path):
@@ -203,7 +200,7 @@ class Dog_Watcher():
         # Here you should modify it depending of the directory.
         try:
             self.set_full_path_file(self.path + self.slash + self.file_name)
-            print(self.full_path_file)
+            
             with FileManager(self.full_path_file).detect() as file:
                 file.write(self.header+'\n')
                 print(f"Header = {self.header}")
@@ -234,8 +231,7 @@ class Dog_Watcher():
                     self.file_name = self.real_file_name+'_'+str(replica_number)+self.extension
             else:
                 self.file_name = self.real_file_name+'_'+str(replica_number)+self.extension
-            print(self.file_name)
-            print(replica_number)
+            
             replica_number = replica_number +1
             self.file_detection(replica_number)
 
@@ -252,22 +248,22 @@ class Dog_Watcher():
                     header = header+',' + virtual_sensor.get_name()+'_'+property
                     
         self.header = self.header+header 
-        print(self.header)
+        
 
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
-        for type in self.connected_sensors:
-            properties = self.control_center[type][0].get_properties()
+        for connected_sensor in self.connected_sensors:
+            properties = self.control_center[connected_sensor][0].get_properties()
             for property in properties:
                 values = []
-                print(f"{type+'_'+property}: ",end='')
-                virtual_sensors= self.control_center[type]
+                print(f"{connected_sensor+'_'+property}: ",end='')
+                virtual_sensors= self.control_center[connected_sensor]
                 for virtual_sensor in virtual_sensors:
-                    values.append(virtual_sensor.avg_prop[property][self.trigger_number])
+                    values.append(float(virtual_sensor.avg_prop[property][self.trigger_number]))
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
-                print(f"{values}",end=' ')
-                print(type(values))
+                values_str = str(values)
+                print(f"{values_str[1:-1]}",end=' ')
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
@@ -289,6 +285,8 @@ class Dog_Watcher():
                     self.avg_exception = True
                     print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
                     self.add_avg_data(virtual_sensor)
+                finally:
+                    continue
      
     def add_avg_data(self, virtual_sensor):
         # This "i" is just for the detection of the properties' name
@@ -317,7 +315,7 @@ class Dog_Watcher():
                         virtual_sensor.avg_prop[property] = [np.nan]
                     elif normal_op:
                         # The axis is for making the mean for each row, not column.
-                        virtual_sensor.avg_prop[property] = [np.nanmean(virtual_sensor.avg_prop[property])]
+                        virtual_sensor.avg_prop[property] = [float(round(np.nanmean(virtual_sensor.avg_prop[property]),2))]
                         
             
     def save_data(self):
@@ -355,9 +353,8 @@ class Dog_Watcher():
                         self.full_time = time.ctime(self.start_time_average).split()
                         
                         print(f"Captured Date ={self.full_time[0]} {self.full_time[2]} {self.full_time[1]} {self.full_time[4]}, Time = {self.full_time[3]}")
-                        
             
-                        xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg}\n")
+                        xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg[1:-1]}\n")
                         print("\n---------------------------------")
                         print("Saving data in memory",end="")
                         for i in range(5):
@@ -368,14 +365,19 @@ class Dog_Watcher():
                     
     def join_fun(self):
         self.results_avg = []
-        for type in self.connected_sensors:
-            for virtual_sensor in self.control_center[type]:
+        i=0
+        for connected_sensor in self.connected_sensors:
+            for virtual_sensor in self.control_center[connected_sensor]:
                 for value in virtual_sensor.avg_prop.values():
-                    self.results_avg.append(value[0])
-        #self.results_avg = str(self.results_avg)
-
-        print(self.results_avg)
-        print(type(self.results_avg))
+                    # The array has just one value
+                    self.results_avg.append(float(value[0]))
+                    i = i +1
+                    if connected_sensor == 'SHT31' and i == 1 and value>=70:
+                        virtual_sensor.set_heater(True)
+                        time.sleep(0.8)
+                        virtual_sensor.set_heater(False)
+                        
+        self.results_avg = str(self.results_avg)
 
 class Sensor():
     def __init__(self,sensor,type):
@@ -416,14 +418,18 @@ class Sensor():
         return self.type
     
     def trigger(self):
+        self.all_properties_values = []
         for set_fun in self.all_set_fun:
             #We are going to round it to round it to two places
-            self.all_properties_values.append(round(set_fun(),2)) 
+            self.all_properties_values.append(float(round(set_fun(),2)))
+            
             
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
+                self.set_all(np.nan)
                 raise Exception
-            self.attempts_trigger += self.attempts_trigger
+                return
+            self.attempts_trigger = self.attempts_trigger+1
             self.trigger()
                   
     def get_values(self):
@@ -431,6 +437,10 @@ class Sensor():
     
     def get_properties(self):
         return self.all_properties_names
+    
+    
+    
+    
     
     def set_properties_names(self,properties_names):
         self.all_properties_names = properties_names
@@ -502,6 +512,7 @@ class SHT31(Sensor):
     def set_RH(self,*value):
         if len(value) == 0:
             humidity = self.get_real_sensor().relative_humidity
+            
         else:
             humidity = value
         return humidity
@@ -536,7 +547,7 @@ class MLX(Sensor):
 class FileManager(object):
     def __init__(self, file_whole_path):
         self.file_whole_path = file_whole_path
-        print(self.file_whole_path)
+        
 
     def append(self):
         self.file = open(self.file_whole_path, 'a')
