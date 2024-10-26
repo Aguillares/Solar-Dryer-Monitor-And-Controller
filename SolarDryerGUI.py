@@ -21,21 +21,14 @@ class Monitor(tk.Tk):
         self.screen_height = self.winfo_screenheight()
         self.screen_width = self.winfo_screenwidth()
         self.init_path = r"D:\Users\perro\Thesis\init_path.txt"
-        try:
-            self.file=open(self.init_path,'r')
-        except Exception:
-            self.file=open(r"D:\Users\perro\Thesis\init_path.txt",'x+')
-            self.file.write(r"D:\Users\perro\Thesis\n")
-            self.file.write(r"D:\Users\perro\Thesis\solarDryerV3.csv")
-        self.file.close()
-
-        with File(self.init_path) as file:
-            file.readline()
+        with FileManager(self.init_path).read() as file:
+             = file.readline()
             self.read_line = file.readline()
             print(f"Psyco Func {self.read_line}")
 
         with File(self.read_line) as file:
             headers=file.readline()
+            print(headers)
             
             dict_reader = csv.reader(file,delimiter = ',')
             for row in dict_reader:
@@ -56,15 +49,6 @@ class Monitor(tk.Tk):
         # Widgets
         self.menu = Menu(self)
         
-
-class File():
-    def __init__(self,name):
-        self.name = name
-    def __enter__(self):
-        self.file = open(self.name,'r')
-        return self.file
-    def __exit__(self, *args):
-        self.file.close()
 
 class Menu(ttk.Frame):
 
@@ -134,7 +118,30 @@ class Psychrometric(Monitor):
         print(f"Psy width = {self.win_width},Psy height = {self.win_height}")
         self.title("Psychrometric Chart")
 
-        
+
+class FileManager(object):
+    def __init__(self, file_whole_path):
+        self.file_whole_path = file_whole_path
+
+    def append(self):
+        self.file = open(self.file_whole_path, 'a')
+        return self.file
+    
+    def read(self):
+        self.file = open(self.file_whole_path,'r+')
+        return self.file
+
+    def over_write(self):
+        self.file = open(self.file_whole_path,'w+')
+        return self.file
+
+    def detect(self):
+        self.file = open(self.file_whole_path,'x')
+        return self.file
+
+    def __exit__(self, *args):
+        self.file.close()
+
 class Weight(Monitor):
     def __init__(self,screen_width,screen_height):
         super().__init__()
