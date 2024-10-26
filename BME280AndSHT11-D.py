@@ -110,7 +110,9 @@ class Dog_Watcher():
             "MLX90614" : [],
             "SHT31" : [],
         }
-        
+        number_BME280 = 1
+        number_SHT31= 1
+        number_MLX= 1
         # We have 8 channels or ports.
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
@@ -118,9 +120,6 @@ class Dog_Watcher():
             added_BME280 = [False, False] # We have two addressess for this sensor.
             added_SHT31 = [False, False] # We have two addresses for this sensor
             added_MLX = False
-            number_BME280 = 1
-            number_SHT31= 1
-            number_MLX= 1
             attempts = 5
             for attempt in range(attempts):
                 
