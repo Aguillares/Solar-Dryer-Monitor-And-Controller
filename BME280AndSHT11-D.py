@@ -114,25 +114,24 @@ class Dog_Watcher():
         number_SHT31= 1
         number_MLX= 1
         # We have 8 channels or ports.
+        os_error_at=0
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
              # After it is added one sensor, no more are accepted with the same address, because we are going to save the same sensor again.
             added_BME280 = [False, False] # We have two addressess for this sensor.
             added_SHT31 = [False, False] # We have two addresses for this sensor
             added_MLX = False
-            attempts = 5
+            attempts = 3
             for attempt in range(attempts):
-                
-                # This is part is to lock a specific channel, and to scan that one only.
-                if self.tca[channel].try_lock():
-                    addresses = self.tca[channel].scan()
+                try:
+                    if self.tca[channel].try_lock():
+                        addresses = self.tca[channel].scan()
                    
                     #After it is scanned we are going to unlock it again, to let communation flow later
                     self.tca[channel].unlock()
                     try:
                         # We have different addresses according to the sensor.
                         for address in addresses:
-                            
                             if hex(address) == hex(0x76) and not added_BME280[0]:
                                 added_BME280[0] = True
                                 virtual_sensor = BME280(self.tca,channel,address)
@@ -165,7 +164,13 @@ class Dog_Watcher():
 
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
-            
+                except OSError as e:
+                    print(f"There's a wire problem, check wires (one power wire can be desconnected)")
+                    time.sleep(2)
+                    os_error_at = os_error_at + 1
+                    if os_error_at >=2:
+                        self.cleanAndExit()
+                            
         self.remove_sensors()
     
     def virtual_sensor_creation(self,virtual_sensor,channel,number):
