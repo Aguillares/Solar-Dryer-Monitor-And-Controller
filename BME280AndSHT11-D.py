@@ -164,7 +164,7 @@ class Dog_Watcher():
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
                 except OSError as e:
-                    print(f"Aborting, there torn wires or desconected, (check power wires) ")
+                    print(f"Aborting, there are torn wires or desconected, (check power wires) ")
                     time.sleep(2)
                     self.cleanAndExit()
                     
