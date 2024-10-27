@@ -125,6 +125,9 @@ class Dog_Watcher():
             for attempt in range(attempts):
                 try:
                     self.tca[channel]
+                    if os_error_at >=1:
+                        self.tca[channel].unlock()
+                        
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
                    
