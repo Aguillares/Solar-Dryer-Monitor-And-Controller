@@ -125,9 +125,9 @@ class Dog_Watcher():
             for attempt in range(attempts):
                 try:
                     self.tca[channel]
-                    if os_error_at >=1:
+                    if os_error_at == 1:
                         self.tca[channel].unlock()
-                        
+
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
                    
@@ -172,7 +172,8 @@ class Dog_Watcher():
                     print(f"There's a wire problem, check wires (one power wire can be desconnected)")
                     time.sleep(2)
                     os_error_at = os_error_at + 1
-                    if os_error_at >=2:
+                    print(os_error_at)
+                    if os_error_at ==3:
                         self.cleanAndExit()
                     
         self.remove_sensors()
