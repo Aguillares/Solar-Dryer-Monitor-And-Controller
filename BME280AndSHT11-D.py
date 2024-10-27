@@ -114,7 +114,6 @@ class Dog_Watcher():
         number_SHT31= 1
         number_MLX= 1
         # We have 8 channels or ports.
-        os_error_at=0
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
              # After it is added one sensor, no more are accepted with the same address, because we are going to save the same sensor again.
@@ -124,10 +123,6 @@ class Dog_Watcher():
             attempts = 3
             for attempt in range(attempts):
                 try:
-                    self.tca[channel]
-                    if os_error_at >=  1:
-                        self.tca[channel].unlock()
-
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
                    
@@ -169,12 +164,9 @@ class Dog_Watcher():
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
                 except OSError as e:
-                    print(f"There's a wire problem, check wires (one power wire can be desconnected)")
+                    print(f"Aborting, there torn wires or desconected, (check power wires) ")
                     time.sleep(2)
-                    os_error_at = os_error_at + 1
-                    print(os_error_at)
-                    if os_error_at ==3:
-                        self.cleanAndExit()
+                    self.cleanAndExit()
                     
         self.remove_sensors()
     
