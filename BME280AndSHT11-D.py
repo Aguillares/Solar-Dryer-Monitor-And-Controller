@@ -114,7 +114,6 @@ class Dog_Watcher():
         number_SHT31= 1
         number_MLX= 1
         # We have 8 channels or ports.
-        os_error_at=0
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
              # After it is added one sensor, no more are accepted with the same address, because we are going to save the same sensor again.
@@ -165,12 +164,10 @@ class Dog_Watcher():
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
                 except OSError as e:
-                    print(f"There's a wire problem, check wires (one power wire can be desconnected)")
+                    print(f"Aborting, there are torn wires or desconected, (check power wires) ")
                     time.sleep(2)
-                    os_error_at = os_error_at + 1
-                    if os_error_at >=2:
-                        self.cleanAndExit()
-                            
+                    self.cleanAndExit()
+                    
         self.remove_sensors()
     
     def virtual_sensor_creation(self,virtual_sensor,channel,number):
