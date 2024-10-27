@@ -124,6 +124,7 @@ class Dog_Watcher():
             attempts = 3
             for attempt in range(attempts):
                 try:
+                    self.tca[channel]
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
                    
@@ -170,7 +171,7 @@ class Dog_Watcher():
                     os_error_at = os_error_at + 1
                     if os_error_at >=2:
                         self.cleanAndExit()
-                            
+                    
         self.remove_sensors()
     
     def virtual_sensor_creation(self,virtual_sensor,channel,number):
