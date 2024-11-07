@@ -67,7 +67,7 @@ class Dog_Watcher():
         
         new = True
         self.display_trigger = 10    # 5 seconds
-        self.average_trigger = 5*60+ 0*5  # 5 min
+        self.average_trigger = 0*60+ 2*5  # 5 min
         self.minimum_sample = int((self.average_trigger/self.display_trigger + 1)*0.8) # To have at least 80% of the data.
         self.header = "Day,Month,Year,Time"
         print(f"Header = {self.header}")
