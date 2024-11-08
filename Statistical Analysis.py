@@ -151,4 +151,7 @@ class Analyser():
 
 if __name__ == '__main__':
     analizer = Analyser('Sensors_data_room.csv')
+    analizer = Analyser('Sensors_data_outside.csv')
+    analizer = Analyser('Sensors_data_Chamber.csv')
+    analizer = Analyser('Sensors_data_Chamber2.csv')
     print("Hello")
