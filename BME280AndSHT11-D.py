@@ -30,12 +30,7 @@ class Dog_Watcher():
         self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
-        # Reset the sensors power.
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(16,GPIO.OUT)
-        GPIO.output(16,False)
-        time.sleep(0.1)
-        GPIO.output(16,True)
+        
         
 
     def init(self):
@@ -575,10 +570,16 @@ class FileManager(object):
 
 if __name__ == "__main__":
     try:
-       dog_watcher = Dog_Watcher()
-       #dog_watcher.init()
-       dog_watcher.setup()
-       dog_watcher.save_data()
+        # Reset the sensors power.
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(16,GPIO.OUT)
+        GPIO.output(16,False)
+        time.sleep(0.1)
+        GPIO.output(16,True)
+        dog_watcher = Dog_Watcher()
+        #dog_watcher.init()
+        dog_watcher.setup()
+        dog_watcher.save_data()
             
     except KeyboardInterrupt:
         print("Exiting...")
