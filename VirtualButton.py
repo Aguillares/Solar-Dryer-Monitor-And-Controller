@@ -7,6 +7,9 @@ GPIO.setup(11,GPIO.OUT)
 GPIO.setup(13,GPIO.OUT)
 try:
     GPIO.output(16,True)
+    GPIO.output(18,True)
+    GPIO.output(11,True)
+    GPIO.output(13,True)
     while(True):
         print("High")
         pass
