@@ -30,6 +30,12 @@ class Dog_Watcher():
         self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
+        # Reset the sensors power.
+        GPIO.setmode(GPIO.BOARD)
+        GPIO.setup(16,GPIO.OUT)
+        GPIO.output(16,False)
+        time.sleep(0.1)
+        GPIO.output(16,True)
         
 
     def init(self):
@@ -576,3 +582,6 @@ if __name__ == "__main__":
             
     except KeyboardInterrupt:
         print("Exiting...")
+        GPIO.cleanup()
+    
+        
