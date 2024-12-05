@@ -438,10 +438,7 @@ class Sensor():
     
     def get_properties(self):
         return self.all_properties_names
-    
-    
-    
-    
+
     
     def set_properties_names(self,properties_names):
         self.all_properties_names = properties_names
