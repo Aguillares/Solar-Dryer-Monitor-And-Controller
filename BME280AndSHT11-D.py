@@ -27,7 +27,7 @@ class Dog_Watcher():
         # You need to change your initial path
         self.slash = '/'
         self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
-        self.extension ='.cvs' 
+        self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
         
