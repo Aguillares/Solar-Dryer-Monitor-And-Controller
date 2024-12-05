@@ -569,11 +569,11 @@ class FileManager(object):
 if __name__ == "__main__":
     try:
         # Reset the sensors power.
-        GPIO.setmode(GPIO.BOARD)
-        GPIO.setup(16,GPIO.OUT)
-        GPIO.output(16,False)
+        
+        GPIO.setup(23,GPIO.OUT)
+        GPIO.output(23,False)
         time.sleep(0.1)
-        GPIO.output(16,True)
+        GPIO.output(23,True)
         dog_watcher = Dog_Watcher()
         #dog_watcher.init()
         dog_watcher.setup()
