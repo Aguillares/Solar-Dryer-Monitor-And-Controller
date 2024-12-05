@@ -7,9 +7,7 @@ Created on Mon Sep  9 06:40:26 2024
 import re
 import glob
 import time
-import busio
 import board
-from smbus2 import SMBus
 from adafruit_mlx90614 import MLX90614
 from adafruit_bme280 import basic as adafruit_bme280
 import sys
