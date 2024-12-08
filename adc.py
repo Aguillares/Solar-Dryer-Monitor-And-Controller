@@ -57,7 +57,7 @@ def calculate_temperature(adc_value):
     # Calculate the thermistor resistance
     
 
-    voltage = adc_value * (5 / 1023.0)  # Assuming 3.3V reference
+    voltage = adc_value * (5 / 255.0)  # Assuming 3.3V reference
     R2 = R1 * (5/ voltage - 1.0)
 
     # Calculate temperature using Steinhart-Hart equation
