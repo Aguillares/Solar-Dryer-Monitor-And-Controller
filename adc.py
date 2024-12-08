@@ -28,8 +28,7 @@ signal.signal(signal.SIGINT, close)
 
 def get_adc(channel):
     # The next code is for a thermistor of the type NTC 100k, using
-# the equation of Steinhart-Hart
-    Vo = 0
+    # the equation of Steinhart-Hart
     #  Fixed resistor 
     R1 = 100000
     logR2 = 0
@@ -62,6 +61,7 @@ def get_adc(channel):
     # Calculate voltage form ADC value
     # considering the soil moisture sensor is working at 5V
     bits = adc
+    print("bits = ",bits)
     R2 = R1* (1023.0/bits-1.0)
     logR2 = math.log(R2)
     # S-H Equation
