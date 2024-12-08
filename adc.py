@@ -36,7 +36,7 @@ def get_adc(channel):
     temperature = 0
     # Coeffients
     c1 = 0.76645043008e-03 
-    print(c1)
+    
     c2 = 2.081779068e-04
     c3 = 1.250512199e-07
 
@@ -67,6 +67,7 @@ def get_adc(channel):
     logR2 = math.log(R2)
     # S-H Equation
     temperature = (1.0/(c1 + c2*logR2 + c3*logR2*logR2*logR2))
+    print(f"Temperature = {temperature}")
     # Kelvin to Celsius
     temperature = temperature - 273.15
 
