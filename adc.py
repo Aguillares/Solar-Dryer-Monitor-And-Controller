@@ -9,6 +9,7 @@ import sys
 import time
 import spidev
 import RPi.GPIO as GPIO
+import math
 
 spi_ch = 0
 
@@ -21,9 +22,23 @@ def close(signal, frame):
 
 signal.signal(signal.SIGINT, close)
 
-def get_adc(channel):
 
-    
+# You can find the coeffients in the next link:
+# http://www.thinksrs.com/downloads/programs/Therm%20Calc/NTCCalibrator/NTCcalculator.htm
+
+def get_adc(channel):
+    # The next code is for a thermistor of the type NTC 100k, using
+# the equation of Steinhart-Hart
+    Vo = 0
+    #  Fixed resistor 
+    R1 = 100000
+    logR2 = 0
+    R2 = 0
+    temperature = 0
+    # Coeffients
+    c1 = 0.76645043008e-03 
+    c2 = 2.081779068e-04
+    c3 = 1.250512199e-07
 
     # Construct SPI message
     #  First bit (Start): Logic high (1)
@@ -46,16 +61,22 @@ def get_adc(channel):
 
     # Calculate voltage form ADC value
     # considering the soil moisture sensor is working at 5V
-    voltage = (3.3 * adc) / 1024
+    bits = (3.3 * adc) / 1024
+    R2 = R1* (1023.0/bits-1.0)
+    logR2 = math.log(R2)
+    # S-H Equation
+    temperature = (1.0/(c1 + c2*logR2 + c3*logR2*logR2*logR2))
+    # Kelvin to Celsius
+    temperature = temperature - 273.15
 
-    return voltage
+    return temperature
 
 if __name__ == '__main__':
     # Report the channel 0 and channel 1 voltages to the terminal
     try:
         while True:
             adc_0 = get_adc(0)
-            print("ADC Channel 0:", round(adc_0, 2), "V")
+            print("ADC Channel 0:", round(adc_0, 2), " ºC")
             time.sleep(0.2)
 
     except KeyboardInterrupt:
