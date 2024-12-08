@@ -54,7 +54,7 @@ def get_adc(channel):
     # Construct single integer out of the reply (2 bytes)
     adc = 0
     for n in reply:
-        adc = (adc << 8) + n
+        adc = (adc << 19) + n
 
     # Last bit (0) is not part of ADC value, shift to remove it
     adc = adc >> 1
