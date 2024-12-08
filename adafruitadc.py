@@ -18,7 +18,7 @@ c1 = 0.76645043008e-03
 c2 = 2.081779068e-04
 c3 = 1.250512199e-07
 
-def get_average_reading(thermistor, samples=10, delay=0.01):
+def get_average_reading(thermistor, samples=30, delay=0.01):
     values = []
     for _ in range(samples):
         values.append(thermistor.value)
