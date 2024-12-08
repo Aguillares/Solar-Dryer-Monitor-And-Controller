@@ -61,7 +61,7 @@ def get_adc(channel):
 
     # Calculate voltage form ADC value
     # considering the soil moisture sensor is working at 5V
-    bits = (3.3 * adc) / 1024
+    bits = adc
     R2 = R1* (1023.0/bits-1.0)
     logR2 = math.log(R2)
     # S-H Equation
