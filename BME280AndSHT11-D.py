@@ -7,9 +7,7 @@ Created on Mon Sep  9 06:40:26 2024
 import re
 import glob
 import time
-import busio
 import board
-from smbus2 import SMBus
 from adafruit_mlx90614 import MLX90614
 from adafruit_bme280 import basic as adafruit_bme280
 import sys
@@ -27,9 +25,10 @@ class Dog_Watcher():
         # You need to change your initial path
         self.slash = '/'
         self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
-        self.extension ='.cvs' 
+        self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
+        
         
 
     def init(self):
@@ -438,10 +437,7 @@ class Sensor():
     
     def get_properties(self):
         return self.all_properties_names
-    
-    
-    
-    
+
     
     def set_properties_names(self,properties_names):
         self.all_properties_names = properties_names
@@ -572,10 +568,19 @@ class FileManager(object):
 
 if __name__ == "__main__":
     try:
-       dog_watcher = Dog_Watcher()
-       #dog_watcher.init()
-       dog_watcher.setup()
-       dog_watcher.save_data()
+        # Reset the sensors power.
+        
+        GPIO.setup(23,GPIO.OUT)
+        GPIO.output(23,False)
+        time.sleep(0.1)
+        GPIO.output(23,True)
+        dog_watcher = Dog_Watcher()
+        #dog_watcher.init()
+        dog_watcher.setup()
+        dog_watcher.save_data()
             
     except KeyboardInterrupt:
         print("Exiting...")
+        GPIO.cleanup()
+    
+        

@@ -1,0 +1,13 @@
+﻿"Symbol";"Value";"Unit";
+"TraceParts.PartNumber";"10-19092012-082001";"";
+"REFERENCE";"D20-XXX100A";"";
+"TraceParts.PartTitle";"Puerta corredera de una hoja";"";
+"TraceParts.InstanceId";"10-19092012-0820014YPQKL7A60GZYH8FOMD4K117O";"";
+"DESIGN";"Equipo Puerta corrdera de una hoja, Hmax=2300  Ancho max=1000mm";"";
+"TraceParts.PartStatus";"Published";"";
+"TraceParts.PartStatusId";"";"";
+"SUPPLIER";"BMI - AXELENT";"";
+"TraceParts.PartVersion";"1.2.0";"";
+"TRACEPARTS";"TRACEPARTS";"";
+"TraceParts.PartLanguage";"es";"";
+"TraceParts.ClassPath";"AXELENT:10-19092012-082001";"";
