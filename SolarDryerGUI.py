@@ -22,11 +22,11 @@ class Monitor(tk.Tk):
         self.screen_width = self.winfo_screenwidth()
         self.init_path = r"D:\Users\perro\Thesis\init_path.txt"
         with FileManager(self.init_path).read() as file:
-             = file.readline()
+             
             self.read_line = file.readline()
             print(f"Psyco Func {self.read_line}")
 
-        with File(self.read_line) as file:
+        with FileManager(self.read_line).read() as file:
             headers=file.readline()
             print(headers)
             
