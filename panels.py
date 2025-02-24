@@ -294,16 +294,18 @@ if __name__ == '__main__':
     
     win.geometry(f'790x665')
     win.minsize(790,665)
+    '''
     dict_measure = {
         'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
         'RH':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
         'P':[('BME280',3),('BME680',2)]
     }
-    win.bind('<Configure>', lambda ev: print(f"width = {win.winfo_width()}, height = {win.winfo_height()}"))
-    # dict_measure = {'T':[('BME280',3)],
-    #                     'RH':[('BME280',3)],
-    #                     'P':[('BME280',3)]
-    #                     }
+    '''
+    #win.bind('<Configure>', lambda ev: print(f"width = {win.winfo_width()}, height = {win.winfo_height()}"))
+    dict_measure = {'T':[('BME280',3)],
+                         'RH':[('BME280',3)],
+                         'P':[('BME280',3)]
+                         }
 
     # ScrollbarFrame(win)
     GeneralContainer(win,dict_measure).pack(expand = True,fill = 'both')
