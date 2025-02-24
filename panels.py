@@ -224,8 +224,7 @@ class MeasureContainer(ttk.Frame):
         self.bind('<Configure>',self.update_size)
         # This frame is used to put things inside the canvas.
         self.frame = ttk.Frame(self.canvas)
-
-      
+        self.meter_w_h = meter_w_h
         # ttk.Label(self.frame,text='Forehead\n'*sensor_number,background='blue').pack(side='left',expand=True, fill='both')
         for number in range(sensor_number):
             self.meter=ttk.Meter(self.frame,
@@ -233,8 +232,11 @@ class MeasureContainer(ttk.Frame):
                                  metersize=meter_w_h,
                                  subtext = 'S'+str(number),
                                  amountused=50,
-                                 bootstyle= COLOR_VAR_METERS[variable])
+                                 bootstyle= COLOR_VAR_METERS[variable],
+                                 padding=10)
+            
             self.meter.pack()
+            
             
         # Creating a vertical scrollbar
         
@@ -265,7 +267,8 @@ class MeasureContainer(ttk.Frame):
         print(-int(event.delta/MOUSE_SPEED_WIN))
         print(event)
     def update_size(self,event):
-        self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas+self.sensor_name_label.winfo_reqheight()))
+        # self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas+self.sensor_name_label.winfo_reqheight()))
+        self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas))
         if self.canvas.winfo_reqheight() > self.winfo_height():
             current_height = self.canvas.winfo_reqheight()
             # Setting canvas to respond according to the scrollbar through the frame.
@@ -279,6 +282,7 @@ class MeasureContainer(ttk.Frame):
             width = self.winfo_width(),
             height = current_height
         )
+        print(f"Width Given= {self.meter_w_h}, Real Width = {self.meter.winfo_reqwidth()}")
 
 class PanelPlot(ttk.Frame):
     def __init__(self,parent):
