@@ -261,7 +261,7 @@ class PanelPlot(ttk.Frame):
         self.plot.tk_canvas.configure(height=70)
         self.plot.tk_canvas.pack(expand=True,fill='both')
         self.plot.toolbar.pack(expand=True,fill='both')
-        self.plot.toolbar.sa
+        
         
         
         # self.plot.tk_canvas.grid(row = 0,column=0,columnspan=1,sticky='nswe')
