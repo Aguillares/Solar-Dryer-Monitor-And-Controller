@@ -32,31 +32,31 @@ class GeneralContainer(ttk.Frame):
 class ScrollbarFrame(ttk.Frame):
     def __init__(self,parent):
         super().__init__(master=parent)
-        self.set_label_background(TITLE_VAR_FONT)
+        # self.set_header_and_bg(TITLE_VAR_FONT)
 
-    def set_label_background(self,CONST,title):
-        font_ =  ttk.font.Font(name=CONST[0],
-                               family = CONST[1],
-                               size = CONST[2])
-        ttk.Label(self, font = font_).place(x = 0,
+    def set_header_and_bg(self,CONST_FONT,CONST_COLOR,title):
+        font_ =  ttk.font.Font(name=CONST_FONT[0],
+                               family = CONST_FONT[1],
+                               size = CONST_FONT[2])
+        ttk.Label(self, font = font_, background=CONST_COLOR).place(x = 0,
                                          y = 0,
                                          relwidth = 1,
                                          anchor = 'nw')
-        ttk.Label(self, font = font_, text = title)
-        print("What do you sat?")
+        ttk.Label(self, font = font_, background = CONST_COLOR, text = title).pack()
+        
 
 # PanelData holds all the widgets are inside it.
-class PanelData(ttk.Frame):
+class PanelData(ScrollbarFrame):
     # parent: GeneralContainer
     # dict_: Sensors' information.
     # var: Variable name (BME280,SHT31,...)
     def __init__(self, parent,dict_,var):
         # Heritage
-        super().__init__(master = parent)
+        super().__init__(parent = parent)
         # We divide the panel for the canvas and the meters.
         # Font for the sensor's name.
         # Notice we use the constant TITLE_VAR_FONT.
-        font_ = ttk.font.Font(name=TITLE_VAR_FONT[0],family=TITLE_VAR_FONT[1],size=TITLE_VAR_FONT[2])
+        # font_ = ttk.font.Font(name=TITLE_VAR_FONT[0],family=TITLE_VAR_FONT[1],size=TITLE_VAR_FONT[2])
         # We need to set the title's background, we use a label for it.
         # "place" method is used inasmuch as we can be overrided by the next widget.
         # Even we don't use any word here, we should use the same font
@@ -64,11 +64,12 @@ class PanelData(ttk.Frame):
         # same width between both.
         # The explanation why we don't use fill with the label title
         # it is because we want the title to be centered.
-        ttk.Label(self,font=font_,background=COLOR_TITLE_BG[var]).place(x=0,y=0,relwidth=1,anchor='nw')
+        # ttk.Label(self,font=font_,background=COLOR_TITLE_BG[var]).place(x=0,y=0,relwidth=1,anchor='nw')
         # Here it is the actual title.
         # To print the text we identify the variable with proper method.
-        self.sensor_name_label=ttk.Label(self,background=COLOR_TITLE_BG[var],text=self.identify_variable(var),font=font_)
-        self.sensor_name_label.pack()
+        # self.sensor_name_label=ttk.Label(self,background=COLOR_TITLE_BG[var],text=self.identify_variable(var),font=font_)
+        # self.sensor_name_label.pack()
+        self.set_header_and_bg(TITLE_VAR_FONT,COLOR_TITLE_BG[var],self.identify_var(var))
         # Horizontal canvas used to get all meters widgets and its canvas,
         # it allows horizontal movement.
         self.hor_canvas = ttk.Canvas(self)
@@ -134,7 +135,7 @@ class PanelData(ttk.Frame):
             MeasureContainer(self.frame_measure,var,sensor_name,sensor_number,self.meter_w_h,self.meter_corrected).pack(side='left',expand=True,fill='both')
     
     # We can give the proper title variable according to key
-    def identify_variable(self,variable):
+    def identify_var(self,variable):
         match variable:
             case "T":
                 return 'Temperature'
@@ -200,7 +201,6 @@ class MeasureContainer(ttk.Frame):
             height = self.height_canvas,
             )
 
-        print(f"Canvas height measure = {self.height_canvas}")
         self.canvas.pack(expand=True,fill='both')
         self.bind('<Configure>',self.update_size)
         # This frame is used to put things inside the canvas.
@@ -236,8 +236,6 @@ class MeasureContainer(ttk.Frame):
             self.canvas.unbind_all('<MouseWheel>')
 
     def update_size(self,event):
-        print(f"meter width = {self.meter.winfo_reqwidth()}, canvas width = {self.canvas.winfo_width()}")
-        print(f"canvas height = {self.canvas.winfo_reqheight()}")
         self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas+self.sensor_name_label.winfo_reqheight()))
         if self.canvas.winfo_reqheight() > self.winfo_height():
             current_height = self.canvas.winfo_reqheight()
@@ -286,19 +284,20 @@ if __name__ == '__main__':
     [print(font_tk) for font_tk in ttk.font.families()]
     themes=win.style.theme_names()
     
-    win.geometry('400x600')
+    win.geometry(f'790x665+{win.winfo_screenwidth()/2}')
+    win.minsize(790,665)
     dict_measure = {
         'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
         'RH':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
         'P':[('BME280',3),('BME680',2)]
     }
-    
+    win.bind('<Configure>', lambda ev: print(f"width = {win.winfo_width()}, height = {win.winfo_height()}"))
     # dict_measure = {'T':[('BME280',3)],
     #                     'RH':[('BME280',3)],
     #                     'P':[('BME280',3)]
     #                     }
 
-    ScrollbarFrame(win)
-    # GeneralContainer(win,dict_measure).pack(expand = True,fill = 'both')
+    # ScrollbarFrame(win)
+    GeneralContainer(win,dict_measure).pack(expand = True,fill = 'both')
     
     win.mainloop()
