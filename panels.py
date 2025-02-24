@@ -254,7 +254,7 @@ class MeasureContainer(ttk.Frame):
                 self.canvas.bind_all('<MouseWheel>',lambda event: self.canvas.yview_scroll(-int(event.delta/MOUSE_SPEED_WIN),'units'))
             else :
                 self.canvas.bind_all('<Button-4>',lambda event: self.canvas.yview_scroll(MOUSE_SPEED_LNX,'units'))
-                self.canvas.bind_all('<Button-5>',lambda event: self.canvas.yview_scroll(MOUSE_SPEED_LNX,'units'))
+                self.canvas.bind_all('<Button-5>',lambda event: self.canvas.yview_scroll(-MOUSE_SPEED_LNX,'units'))
             
             
         else:
