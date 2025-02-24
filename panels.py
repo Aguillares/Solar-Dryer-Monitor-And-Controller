@@ -23,6 +23,7 @@ class GeneralContainer(ttk.Frame):
         for ind,key in tuple_:
             # We create the panel where 
             PanelData(self,dict_[key],key).grid(row=ind,column=1,sticky='nsew')
+            PanelPlot(self).grid(row=ind,column=0,sticky='nswe')
         # We get the index, it tells where it can be put.
         # We establish rows and columns.
         self.grid_rowconfigure(list(range(number_plots)), weight = 1, uniform='a')
@@ -257,7 +258,13 @@ class PanelPlot(ttk.Frame):
         # (Name of the sensor type , sensors' number)
         self.plot=Plot(self)
         # self.plot.patch.set_facecolor(color)
-        self.plot.tk_canvas.grid(row = 0,column=0,columnspan=1,sticky='nswe')
+        self.plot.tk_canvas.configure(height=70)
+        self.plot.tk_canvas.pack(expand=True,fill='both')
+        self.plot.toolbar.pack(expand=True,fill='both')
+        self.plot.toolbar.sa
+        
+        
+        # self.plot.tk_canvas.grid(row = 0,column=0,columnspan=1,sticky='nswe')
 class Plot(Figure):
     def __init__(self,parent):
         prop_w = 0.7
@@ -270,21 +277,22 @@ class Plot(Figure):
         canvas = FigureCanvasTkAgg(self,master=parent)
         
         canvas.draw()
-        self.toolbar = NavigationToolbar2Tk(canvas,parent,pack_toolbar=False)
+        
        
         canvas.mpl_connect("key_press_event", key_press_handler)
         self.tk_canvas=canvas.get_tk_widget()
-        
-        
-        # self.toolbar.pack() 
 
+        self.toolbar = NavigationToolbar2Tk(canvas,parent,pack_toolbar=False)
+        
+        
+        
 if __name__ == '__main__':
     
     win = ttk.Window(themename=THEME_NAME)
     [print(font_tk) for font_tk in ttk.font.families()]
     themes=win.style.theme_names()
     
-    win.geometry(f'790x665+{win.winfo_screenwidth()/2}')
+    win.geometry(f'790x665')
     win.minsize(790,665)
     dict_measure = {
         'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
