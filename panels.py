@@ -12,11 +12,18 @@ import platform
 # The GeneralContainer has all widgets in the window.
 class GeneralContainer(ttk.Frame):
     def __init__(self,parent,dict_):
-        system = platform.system()
-        print(system)
+        self.system = platform.system()
+        print(self.system)
+        # if system == "Window" or system == "Darwin":
+        #     self.bind_vert = "<MouseWheel>"
+        #     self.bind_hor = "<Shift-MouseWheel>"
+        # else:
+        #     self.bind_vert = ("<Button-4>","<Button-5>")
+        #     self.bind_hor = ("<Shift-Button-4>","<Shift-Button-5>")
         super().__init__(parent)
         # We get the number of plots 
         number_plots = len(dict_)
+        
         # We have the keys name with "keys()" method.
         get_keys = dict_.keys()
         # The first part of tuple says in which row will be set.
@@ -25,7 +32,7 @@ class GeneralContainer(ttk.Frame):
         
         for ind,key in tuple_:
             # We create the panel where 
-            PanelData(self,dict_[key],key).grid(row=ind,column=1,sticky='nsew')
+            PanelData(self,dict_[key],key,self.system).grid(row=ind,column=1,sticky='nsew')
             PanelPlot(self).grid(row=ind,column=0,sticky='nswe')
         # We get the index, it tells where it can be put.
         # We establish rows and columns.
@@ -39,6 +46,7 @@ class ScrollbarFrame(ttk.Frame):
         # self.set_header_and_bg(TITLE_VAR_FONT)
 
     def set_header_and_bg(self,CONST_FONT,CONST_COLOR,title):
+        
         font_ =  ttk.font.Font(name=CONST_FONT[0],
                                family = CONST_FONT[1],
                                size = CONST_FONT[2])
@@ -54,7 +62,8 @@ class PanelData(ScrollbarFrame):
     # parent: GeneralContainer
     # dict_: Sensors' information.
     # var: Variable name (BME280,SHT31,...)
-    def __init__(self, parent,dict_,var):
+    def __init__(self, parent,dict_,var,system):
+        self.system = system
         # Heritage
         super().__init__(parent = parent)
         # We divide the panel for the canvas and the meters.
@@ -136,7 +145,7 @@ class PanelData(ScrollbarFrame):
         for sensor_name,sensor_number in dict_:
             # We all MeasureContainers will be inside of self.frame_measure, and
             # the arrangement is one next to another, they are going to cover all the widget.
-            MeasureContainer(self.frame_measure,var,sensor_name,sensor_number,self.meter_w_h,self.meter_corrected).pack(side='left',expand=True,fill='both')
+            MeasureContainer(self.frame_measure,var,sensor_name,sensor_number,self.meter_w_h,self.meter_corrected,self.system).pack(side='left',expand=True,fill='both')
     
     # We can give the proper title variable according to key
     def identify_var(self,variable):
@@ -151,7 +160,11 @@ class PanelData(ScrollbarFrame):
     # up
     def update_scroll(self,ev):
         if self.hor_canvas.winfo_reqwidth() > self.winfo_width():
-            self.hor_canvas.bind_all('<Shift-MouseWheel>',lambda ev:self.hor_canvas.xview_scroll(-int(ev.delta/MOUSE_SPEED),'units'))
+            if self.system == "Window":
+                self.hor_canvas.bind_all('<Shift-MouseWheel>',lambda ev:self.hor_canvas.xview_scroll(-int(ev.delta/MOUSE_SPEED),'units'))
+            else:
+                self.hor_canvas.bind_all('<Shift-Button-4>',lambda ev: print(ev))
+                self.hor_canvas.bind_all('<Shift-Button-5>',lambda ev: print(ev))
         else:
             # We deactivate the combitination of keys.
             self.hor_canvas.unbind_all('<Shift-MouseWheel>')
@@ -184,7 +197,8 @@ class PanelData(ScrollbarFrame):
 
         
 class MeasureContainer(ttk.Frame):
-    def __init__(self,parent,variable,sensor_name,sensor_number,meter_w_h,meter_corrected):
+    def __init__(self,parent,variable,sensor_name,sensor_number,meter_w_h,meter_corrected,system):
+        self.system = system
         # In this case the parent is the canvas.
         
         self.parent = parent
@@ -236,14 +250,20 @@ class MeasureContainer(ttk.Frame):
 
     def update_scroll(self,ev):
         if self.canvas.winfo_reqheight() > self.winfo_height():
-            self.canvas.bind_all('<MouseWheel>',self.printing)
-            print(1)
+            if self.system == "Windows":
+                self.canvas.bind_all('<MouseWheel>',self.printing)
+            else :
+                self.canvas.bind_all('<Button-4>',lambda ev: print(ev))
+                self.canvas.bind_all('<Button-5>',lambda ev: print(ev))
+            
             
         else:
             self.canvas.unbind_all('<MouseWheel>')
     def printing(self,event):
+    
         self.canvas.yview_scroll(-int(event.delta/MOUSE_SPEED),'units')
         print(-int(event.delta/MOUSE_SPEED))
+        print(event)
     def update_size(self,event):
         self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas+self.sensor_name_label.winfo_reqheight()))
         if self.canvas.winfo_reqheight() > self.winfo_height():
