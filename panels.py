@@ -299,7 +299,7 @@ if __name__ == '__main__':
     #                     'P':[('BME280',3)]
     #                     }
 
-    ScrollbarFrame(win)
-    # GeneralContainer(win,dict_measure).pack(expand = True,fill = 'both')
+    # ScrollbarFrame(win)
+    GeneralContainer(win,dict_measure).pack(expand = True,fill = 'both')
     
     win.mainloop()
