@@ -161,10 +161,10 @@ class PanelData(ScrollbarFrame):
     def update_scroll(self,ev):
         if self.hor_canvas.winfo_reqwidth() > self.winfo_width():
             if self.system == "Window":
-                self.hor_canvas.bind_all('<Shift-MouseWheel>',lambda ev:self.hor_canvas.xview_scroll(-int(ev.delta/MOUSE_SPEED),'units'))
+                self.hor_canvas.bind_all('<Shift-MouseWheel>',lambda ev:self.hor_canvas.xview_scroll(-int(ev.delta/MOUSE_SPEED_WIN),'units'))
             else:
-                self.hor_canvas.bind_all('<Shift-Button-4>',lambda ev: print(ev))
-                self.hor_canvas.bind_all('<Shift-Button-5>',lambda ev: print(ev))
+                self.hor_canvas.bind_all('<Shift-Button-4>',lambda ev: self.hor_canvas.xview_scroll(MOUSE_SPEED_LNX))
+                self.hor_canvas.bind_all('<Shift-Button-5>',lambda ev: self.hor_canvas.xview_scroll(-MOUSE_SPEED_LNX))
         else:
             # We deactivate the combitination of keys.
             self.hor_canvas.unbind_all('<Shift-MouseWheel>')
@@ -251,18 +251,18 @@ class MeasureContainer(ttk.Frame):
     def update_scroll(self,ev):
         if self.canvas.winfo_reqheight() > self.winfo_height():
             if self.system == "Windows":
-                self.canvas.bind_all('<MouseWheel>',self.printing)
+                self.canvas.bind_all('<MouseWheel>',lambda event: self.canvas.yview_scroll(-int(event.delta/MOUSE_SPEED_WIN),'units'))
             else :
-                self.canvas.bind_all('<Button-4>',lambda ev: print(ev))
-                self.canvas.bind_all('<Button-5>',lambda ev: print(ev))
+                self.canvas.bind_all('<Button-4>',lambda event: self.canvas.yview_scroll(MOUSE_SPEED_LNX,'units'))
+                self.canvas.bind_all('<Button-5>',lambda event: self.canvas.yview_scroll(MOUSE_SPEED_LNX,'units'))
             
             
         else:
             self.canvas.unbind_all('<MouseWheel>')
     def printing(self,event):
     
-        self.canvas.yview_scroll(-int(event.delta/MOUSE_SPEED),'units')
-        print(-int(event.delta/MOUSE_SPEED))
+        
+        print(-int(event.delta/MOUSE_SPEED_WIN))
         print(event)
     def update_size(self,event):
         self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas+self.sensor_name_label.winfo_reqheight()))

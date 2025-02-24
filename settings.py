@@ -10,8 +10,8 @@ COLOR_TITLE_BG = {
     'P': '#ADB5BD'
 }
 
-MOUSE_SPEED = 120
-
+MOUSE_SPEED_WIN = 120
+MOUSE_SPEED_LNX = 1
 # -> Fonts
 TITLE_VAR_FONT = ('Title',"Times New Roman",15)
 SENSOR_NAME_FONT = ("Sensors Name","Comic Sans MS",12)
