@@ -9,59 +9,94 @@ and control a solar dryer in Chapingo Autonomous University
 """
 import csv
 import tkinter as tk
-from tkinter import ttk
+import ttkbootstrap as ttk
 from tkinter import filedialog
 import numpy as np
-import matplotlib.pyplot as plt
+from panels import GeneralContainer
 
-
-class Monitor(tk.Tk):
+class Monitor(ttk.Window):
     def __init__(self):
-        super().__init__() #If you don't put this, you are not going to be able to make the window
+        # super().__init__(themename= 'solar_dryer') #If you don't put this, you are not going to be able to make the window
+        super().__init__()
+        
+        self.bind('<Configure>',lambda ev: print("width = %d, height = %d" % (ev.width,ev.height)))
         self.screen_height = self.winfo_screenheight()
         self.screen_width = self.winfo_screenwidth()
-        self.init_path = r"D:\Users\perro\Thesis\init_path.txt"
+        self.init_path = r"init_path.txt"
         with FileManager(self.init_path).read() as file:
-             
-            self.read_line = file.readline()
+            # You need to improve the code when there's no table
+            self.read_line = file.readline()[:-1]
+            self.read_line = self.read_line+'/'+file.readline()
             print(f"Psyco Func {self.read_line}")
 
+        self.data_variables = {
+            # The syntax is the following:
+            # key: [name of the variable,[headers],[data]]
+            '_T': ['Temperature' ,[],[]],
+            '_RH': ['Relative Humidity' ,[],[]],
+            '_P': ['Pressure' ,[],[]]
+            } 
+        
         with FileManager(self.read_line).read() as file:
-            headers=file.readline()
-            print(headers)
-            
-            dict_reader = csv.reader(file,delimiter = ',')
-            for row in dict_reader:
-                print(row)
-            for row in dict_reader:
-                print(row[0])
-
-        self.win_height =self.screen_height*0.4
-        self.win_width =self.screen_width*0.35
+            # We convert the csv into "an array" through list.
+            table = np.array(list(csv.reader(file, delimiter = ',')))
+            self.header_date = table[0,:4]
+            self.header_data = table[0,4:]
+            self.date = table[1:,:4]
+            self.sensors_data = table[1:,4:]
+            self.detection()
+        
+        
+        self.win_height = self.screen_height*0.5
+        self.win_width = self.screen_width*0.45
         self.win_x = self.screen_width/2-self.win_width/2
         self.win_y = self.screen_height/2-self.win_height/2
         print(f"Monitor width = {self.win_width},Monitor height = {self.win_height}")
         self.geometry(f"{self.win_width:.0f}x{self.win_height:.0f}+{(self.win_x):.0f}+{(self.win_y):.0f}")
+        self.minsize(820,580)
         self.title("Solar Dryer")
+        self.create_panel()
         
         # Run
     def menu(self):
         # Widgets
         self.menu = Menu(self)
+    def detection(self):
+        for var_type in ['_T','_RH','_P']:
+            found_var = False
+            ind = 0
+            for header_var in self.header_data:
+                if header_var.find(var_type) != -1:
+                    if found_var:
+
+                        found_var = not found_var
+                    self.data_variables[var_type][1].append(header_var)
+                    self.data_variables[var_type][2].append(self.sensors_data[:,ind])
+                ind = ind + 1
+        
+    
+    def variables(self):
+        pass
+
+    def create_panel(self):
+        dict_measure = {'T':(('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)),
+                        'RH':(('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)),
+                        'P':(('BME280',3),('BME680',2))
+                        }
+        
+        GeneralContainer(self,dict_measure).pack(expand = True, fill = 'both')
         
 
 class Menu(ttk.Frame):
 
     def __init__(self,parent):
         super().__init__(parent)
-        
-        
         # self.init_dir_path = 
         # self.init_file_path =
         # Menu
-        self.menu = tk.Menu(parent)
+        self.menu = ttk.Menu(parent)
         parent.configure(menu = self.menu)
-        self.menuContainer = tk.Menu(self,tearoff = False)
+        self.menuContainer = ttk.Menu(self,tearoff = False)
         self.menuContainer.add_command(label = "New", command = lambda : self.new_file())
         self.menuContainer.add_command(label = "Open", command = lambda : self.open_file())
         self.menu.add_cascade(label = 'File', menu =  self.menuContainer)
@@ -72,11 +107,7 @@ class Menu(ttk.Frame):
         self.menu.add_command(label = 'Psychrometry', command = lambda: self.psychrometric())
         self.menu.add_command(label = 'All Charts', command = lambda: self.all())
 
-        # Submenu
-
-        # Placing
-
-        self.pack()
+        # Submenugit
     
     def open_file(self):
         # --TODO-- You have to find a way to let the last file's directory to be the init directory
@@ -86,18 +117,15 @@ class Menu(ttk.Frame):
         print(self.open_dialog)
 
 
-
     def humidity(self,screen_width,screen_height):
         self.humidity_chart = Humidity(screen_width,screen_height)
         
     def temperatures(self,screen_width,screen_height):
         self.temperatures_chart = Temperature(screen_width,screen_height)
-    def psychrometric(self):
-            
 
+    def psychrometric(self):
         self.psychrometric_chart = Psychrometric()
         self.plot_psy = self.psychrometric_chart
-        
         
     def weight(self,screen_width,screen_height):
         self.weight_chart = Weight(screen_width,screen_height)
@@ -108,6 +136,7 @@ class Menu(ttk.Frame):
     def new_file(self):
         # --TODO-- It has to start an empty
         pass
+
 
 class Psychrometric(Monitor):
     def __init__(self):
@@ -146,7 +175,7 @@ class Weight(Monitor):
     def __init__(self,screen_width,screen_height):
         super().__init__()
 
-class Humidity(tk.Tk,):
+class Humidity(tk.Tk):
     def __init__(self,screen_width,screen_height):
         super().__init__()
         self.geometry(f"{self.win_width:.0f}x{self.win_height:.0f}+{(self.screen_width/2-self.win_width/2):.0f}+{(self.screen_height/2-self.win_height/2):.0f}")
@@ -163,6 +192,8 @@ class All():
         self.psychrometric = Psychrometric()
 
 
+
 monitor = Monitor()
+monitor.config
 monitor.menu()
 monitor.mainloop()

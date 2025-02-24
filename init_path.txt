@@ -1,6 +1,2 @@
-/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller
-<<<<<<< HEAD
-Sensors_data.cvs
-=======
-Sensors_data_4.csv
->>>>>>> 3a228be71aa373c8b749f7cda7875c245441141a
+Tables Experiments
+Sensors_data.csv
