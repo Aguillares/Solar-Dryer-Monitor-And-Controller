@@ -107,6 +107,12 @@ class PanelData(ScrollbarFrame):
         # have a delta of 0.49 more in the real width.
         # If we have then "x" units that we give to meter we get
         # 0.49*x more.
+        frame_proof=ttk.Frame(self)
+        frame_proof.pack()
+        self.size_given = 100
+        # self.meter_proof=ttk.Meter(frame_proof,metersize=self.size_given)
+        # self.meter_proof.pack()
+        # self.printing()
         self.delta = 49/100*self.meter_w_h 
         # The meter corrected, the delta added.
         self.meter_corrected = self.meter_w_h+self.delta
@@ -146,6 +152,7 @@ class PanelData(ScrollbarFrame):
             # We all MeasureContainers will be inside of self.frame_measure, and
             # the arrangement is one next to another, they are going to cover all the widget.
             MeasureContainer(self.frame_measure,var,sensor_name,sensor_number,self.meter_w_h,self.meter_corrected,self.system).pack(side='left',expand=True,fill='both')
+    
     
     # We can give the proper title variable according to key
     def identify_var(self,variable):
@@ -228,12 +235,12 @@ class MeasureContainer(ttk.Frame):
         # ttk.Label(self.frame,text='Forehead\n'*sensor_number,background='blue').pack(side='left',expand=True, fill='both')
         for number in range(sensor_number):
             self.meter=ttk.Meter(self.frame,
-                                 metertype='semi',
-                                 metersize=meter_w_h,
+                                 metertype = 'semi',
+                                 metersize = meter_w_h,
                                  subtext = 'S'+str(number),
-                                 amountused=50,
-                                 bootstyle= COLOR_VAR_METERS[variable],
-                                 padding=10)
+                                 amountused = 50,
+                                 bootstyle = COLOR_VAR_METERS[variable],
+                                 )
             
             self.meter.pack()
             
@@ -282,7 +289,7 @@ class MeasureContainer(ttk.Frame):
             width = self.winfo_width(),
             height = current_height
         )
-        print(f"Width Given= {self.meter_w_h}, Real Width = {self.meter.winfo_reqwidth()}")
+        print(f"Width Given= {self.meter_w_h}, Real Width = {self.meter.winfo_reqwidth()}, Screen Width = {self.meter.winfo_vrootwidth()}")
 
 class PanelPlot(ttk.Frame):
     def __init__(self,parent):
