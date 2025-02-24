@@ -10,7 +10,7 @@ COLOR_TITLE_BG = {
     'P': '#ADB5BD'
 }
 
-MOUSE_SPEED = 120
+MOUSE_SPEED = 60
 
 # -> Fonts
 TITLE_VAR_FONT = ('Title',"Times New Roman",15)

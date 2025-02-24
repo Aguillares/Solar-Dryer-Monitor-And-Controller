@@ -7,10 +7,13 @@ import ttkbootstrap as ttk
 import tkinter as tk
 import numpy as np
 from settings import *
+import platform
 
 # The GeneralContainer has all widgets in the window.
 class GeneralContainer(ttk.Frame):
     def __init__(self,parent,dict_):
+        system = platform.system()
+        print(system)
         super().__init__(parent)
         # We get the number of plots 
         number_plots = len(dict_)
@@ -152,6 +155,7 @@ class PanelData(ScrollbarFrame):
         else:
             # We deactivate the combitination of keys.
             self.hor_canvas.unbind_all('<Shift-MouseWheel>')
+        self.hor_canvas.update_idletasks()
 
     def update_canvas(self,ev):
             # self.hor_canvas.config(scrollregion=(0,0,self.hor_canvas.winfo_reqwidth(),self.hor_canvas.winfo_height()))
@@ -192,7 +196,7 @@ class MeasureContainer(ttk.Frame):
         self.sensor_name_label=ttk.Label(self,text=str(sensor_name),font= font_)
         self.sensor_name_label.pack()
 
-        self.canvas= ttk.Canvas(self)
+        self.canvas= tk.Canvas(self)
         self.width_canvas = meter_corrected
         self.height_canvas = self.width_canvas*sensor_number
         # For some reason you need to use the "configure" method to make changes.
@@ -232,10 +236,14 @@ class MeasureContainer(ttk.Frame):
 
     def update_scroll(self,ev):
         if self.canvas.winfo_reqheight() > self.winfo_height():
-            self.canvas.bind_all('<MouseWheel>',lambda event: self.canvas.yview_scroll(-int(event.delta/MOUSE_SPEED),'units'))
+            self.canvas.bind_all('<MouseWheel>',self.printing)
+            print(1)
+            
         else:
             self.canvas.unbind_all('<MouseWheel>')
-
+    def printing(self,event):
+        self.canvas.yview_scroll(-int(event.delta/MOUSE_SPEED),'units')
+        print(-int(event.delta/MOUSE_SPEED))
     def update_size(self,event):
         self.canvas.config(scrollregion = (0,0,self.width_canvas,self.height_canvas+self.sensor_name_label.winfo_reqheight()))
         if self.canvas.winfo_reqheight() > self.winfo_height():
@@ -289,11 +297,11 @@ class Plot(Figure):
 if __name__ == '__main__':
     
     win = ttk.Window(themename=THEME_NAME)
-    [print(font_tk) for font_tk in ttk.font.families()]
+    #[print(font_tk) for font_tk in ttk.font.families()]
     themes=win.style.theme_names()
     
-    win.geometry(f'790x665')
-    win.minsize(790,665)
+    win.geometry(f'390x465')
+    win.minsize(100,205)
     '''
     dict_measure = {
         'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
