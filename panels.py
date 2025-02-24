@@ -43,6 +43,7 @@ class ScrollbarFrame(ttk.Frame):
                                          relwidth = 1,
                                          anchor = 'nw')
         ttk.Label(self, font = font_, text = title)
+        print('hello')
 
 
 # PanelData holds all the widgets are inside it.
