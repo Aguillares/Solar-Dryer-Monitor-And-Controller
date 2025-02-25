@@ -330,17 +330,17 @@ class ChartsWindow(ttk.Window):
         self.geometry(f'{win_width:.0f}x{win_height:.0f}+{win_x:.0f}+{win_y:.0f}')
         # Window minimum size.
         self.minsize(f'{win_width*0.8:.0f}',f'{win_height*0.8:.0f}')
-        '''
-        dict_measure = {
+        
+        self.dict_measure = {
             'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
             'RH':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
             'P':[('BME280',3),('BME680',2)]
         }
-        '''
-        self.dict_measure = {'T':[('BME280',3)],
-                            'RH':[('BME280',3)],
-                            'P':[('BME280',3)]
-                            }
+        
+        # self.dict_measure = {'T':[('BME280',3)],
+        #                     'RH':[('BME280',3)],
+        #                     'P':[('BME280',3)]
+        #                     }
 
         GeneralContainer(self).pack(expand = True,fill = 'both')
         
