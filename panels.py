@@ -248,7 +248,7 @@ class MeasureContainer(ttk.Frame):
             height = self.height_canvas,
         )
         self.canvas.pack(expand=True,fill='both')
-        self.canvas.config(scrollregion = (0,0,meter_corrected,self.height_canvas+self.sensor_name_label.winfo_reqheight()))
+        self.canvas.config(scrollregion = (0,0,meter_corrected,self.canvas.winfo_reqheight()+self.sensor_name_label.winfo_reqheight()+self.scroll_bar.winfo_reqwidth()))
         self.update_size()
         if self.meter.winfo_reqwidth()>1:
             self.unbind("<Map>")
