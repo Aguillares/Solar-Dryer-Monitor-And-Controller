@@ -14,7 +14,13 @@ MOUSE_SPEED_WIN = 120
 MOUSE_SPEED_LNX = 1
 # -> Fonts
 TITLE_VAR_FONT = ('Title',"Times New Roman",15)
-SENSOR_NAME_FONT = ("Sensors Name","Comic Sans MS",12)
+SENSOR_NAME_FONT = ("Sensors_Name","Comic Sans MS",12)
 
 # -> Theme
-THEME_NAME = 'solar_dryer'
+THEME_NAME = "solar_dryer"
+
+SHORTCUT_VARS = {
+    'T': 'Temperature',
+    'RH': 'Relative Humidity',
+    'P': 'Pressure'
+}
