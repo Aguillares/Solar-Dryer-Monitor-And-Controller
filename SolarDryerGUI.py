@@ -79,7 +79,7 @@ class Monitor(ttk.Window):
         pass
 
     def create_panel(self):
-        # ChartsWindow()
+        ChartsWindow()
         OptionsMenu(self).pack(expand = True, fill = 'both')
 
 class Variables(ttk.Toplevel):
