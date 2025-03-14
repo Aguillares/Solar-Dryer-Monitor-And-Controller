@@ -12,13 +12,12 @@ import tkinter as tk
 import ttkbootstrap as ttk
 from tkinter import filedialog
 import numpy as np
-from panels import GeneralContainer
+from panels import *
+
 
 class Monitor(ttk.Window):
     def __init__(self):
-        # super().__init__(themename= 'solar_dryer') #If you don't put this, you are not going to be able to make the window
-        super().__init__()
-        
+        super().__init__(themename= THEME_NAME) #If you don't put this, you are not going to be able to make the window
         self.bind('<Configure>',lambda ev: print("width = %d, height = %d" % (ev.width,ev.height)))
         self.screen_height = self.winfo_screenheight()
         self.screen_width = self.winfo_screenwidth()
@@ -55,6 +54,7 @@ class Monitor(ttk.Window):
         self.geometry(f"{self.win_width:.0f}x{self.win_height:.0f}+{(self.win_x):.0f}+{(self.win_y):.0f}")
         self.minsize(820,580)
         self.title("Solar Dryer")
+        
         self.create_panel()
         
         # Run
@@ -79,13 +79,52 @@ class Monitor(ttk.Window):
         pass
 
     def create_panel(self):
-        dict_measure = {'T':(('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)),
-                        'RH':(('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)),
-                        'P':(('BME280',3),('BME680',2))
-                        }
+        # ChartsWindow()
+        OptionsMenu(self).pack(expand = True, fill = 'both')
+
+class Variables(ttk.Toplevel):
+    def __init__(self):
+        super().__init__()
+        self.sensors_metadata = {
+            'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
+            'RH':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
+            'P':[('BME280',3),('BME680',2)]
+        }
         
-        GeneralContainer(self,dict_measure).pack(expand = True, fill = 'both')
+        GeneralContainer(self).pack(expand = True,fill = 'both')
+
+class OptionsMenu(ttk.Frame):
+    def __init__(self,parent):
+        super().__init__(parent)
         
+        options=ttk.Frame(self,name = 'options')
+        ttk.Label(options,background='cyan').pack(expand=True,fill='both')
+        options.pack(expand =True, fill='both',padx = 10,pady=5)
+        ttk.Button(options)
+        plots_frame = ttk.Frame(self,name = 'plots_frame')
+        plots_frame.rowconfigure((0,1),uniform = 'a',weight=1)
+        plots_frame.columnconfigure((0,1),uniform = 'a',weight=1)
+        plots_frame.pack(expand = True, fill = 'both', padx = 10, pady = 5)
+        buttons_name = [('Fruit Temperature',(0,0)), 
+                        ('Environmental\n    Variables',(0,1)),
+                        ('Fruit Weight',(1,0)),
+                        ('Psychometric\n       Chart',(1,1))]
+        button_style = ttk.Style()
+       
+        for button_name in buttons_name:
+            button=ttk.Button(plots_frame,
+                       cursor='hand2',
+                       text = button_name[0],
+                       padding=(10,5,10,5),
+                       style='danger'
+                       )
+            
+            button.grid(row=button_name[1][0],
+                              column=button_name[1][1],
+                              pady=10,
+                              padx=5,
+                              sticky='news')
+
 
 class Menu(ttk.Frame):
 
@@ -194,6 +233,8 @@ class All():
 
 
 monitor = Monitor()
-monitor.config
-monitor.menu()
+
+# monitor.config
+# monitor.menu()
+
 monitor.mainloop()

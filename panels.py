@@ -9,11 +9,12 @@ import numpy as np
 from settings import *
 import platform
 
-class ChartsWindow(ttk.Window):
+class ChartsWindow(ttk.Toplevel):
     "It is the window that holds every widget"
     def __init__(self):
         # We have started the theme.
-        super().__init__(themename=THEME_NAME)
+        # super().__init__(themename=THEME_NAME)
+        super().__init__()
         self.title("Charts Window")
         # We have the screen dimensions to set the window dimensions.
         screen_height = self.winfo_screenheight()
@@ -79,7 +80,7 @@ class ScrollbarFrame(ttk.Frame):
     def __init__(self,parent:ttk.Frame):
         # We inherit all Frame's properties and behaviours 
         super().__init__(master = parent)
-        # We create a canvas, it can either horizontal or vertical.
+        # We create a canvas, it can be either horizontal or vertical.
         self.canvas  = ttk.Canvas(self)
         # We need to detect the system type to know which combination of keys to use for "bind" method.
         self.system = platform.system()
@@ -97,7 +98,7 @@ class ScrollbarFrame(ttk.Frame):
         # The orientation at the beginning is empty.
         self.orient = ''
 
-    def header_config(self,CONST_FONT:tuple[str,str,int],CONST_COLOR:dict[str,str],title_:str)->None:
+    def header_config(self,CONST_FONT:tuple[str,str,int],CONST_COLOR:str,title_:str)->None:
         '''
         It configures title's font, background and the text.
         '''
@@ -122,6 +123,40 @@ class ScrollbarFrame(ttk.Frame):
         self.scrollbar.place(x=0,rely=1,anchor='sw',relwidth=1)
         # We set the (x/y)scrollcommand with the "scrollbar.set" method.
         self.canvas.config({orient+'scrollcommand':self.scrollbar.set})
+
+    def disable_scroll_all(self,event:tk.Event,prefix:str)->None:
+        '''
+        Scrollbar is disabled depending on the operative system.
+        '''
+        # For Windows or MacOs, we use the MouseWheel event.
+        # For Linux Operative Systems, Buttons 4 and 5 are used.
+        if self.system == "Windows" or self.system == 'Darwin':
+            self.canvas.unbind_all('<'+prefix+'MouseWheel>')
+        else:
+            self.canvas.unbind_all('<'+prefix+'Button-4>')
+            self.canvas.unbind_all('<'+prefix+'Button-5>')
+        
+    def enable_scroll_all(self,event:tk.Event,prefix:str)->None:
+        '''
+        Enable scrolling for the next operative systems:
+        1. Windows.
+        2. MacOs.
+        3. Linux.
+        Linux uses Buttons EVENTS meanwhile the others use MouseWheel EVENT
+        '''
+        # We determine canva's height and is compared with the current window height
+        if self.vertical_threshold > self.winfo_height():
+            # If the OS is either Windows or Darwin, we use MouseWheel EVENT
+            # Otherwise, Buttons are used (Linux)
+            if self.system == "Windows":
+                self.canvas.bind_all('<'+prefix+'MouseWheel>',lambda event: self.prefix_view_scroll[prefix](-int(event.delta/MOUSE_SPEED_WIN),'units'))
+            else :
+                self.canvas.bind_all('<'+prefix+'Button-4>',lambda event: self.prefix_view_scroll[prefix](-MOUSE_SPEED_LNX,'units'))
+                self.canvas.bind_all('<'+prefix+'Button-5>',lambda event: self.prefix_view_scroll[prefix](MOUSE_SPEED_LNX,'units'))
+        # This "else" is interesting because if we have the window higher than the original canvas height
+        # we disable the scrollbar.
+        else:
+            self.disable_scroll_all(event,prefix)
         
 class PanelData(ScrollbarFrame):
     '''
@@ -130,7 +165,7 @@ class PanelData(ScrollbarFrame):
     # parent: GeneralContainer
     # dict_: Sensors' information.
     # var: Variable name (BME280, SHT31,...)
-    def __init__(self, parent, var):
+    def __init__(self, parent, var)->None:
         # "general_container" attribute contains the "GeneralContainer" object.
         self.general_container = parent
         # Variable
@@ -141,7 +176,7 @@ class PanelData(ScrollbarFrame):
         self.header_config(TITLE_VAR_FONT, COLOR_TITLE_BG[var], SHORTCUT_VARS[var])
         # We get all metadata from chart_window object.
         sensors_metadata = self.general_container.charts_window.sensors_metadata[var]
-        # The number of columns is related to sensors type' number
+        # The number of columns is related to sensors type's number
         self.number_col= len(sensors_metadata)
         # We get the maximum sensors number, the name is ignored.
         self.max_num_widgets = max(number for _,number in sensors_metadata)
@@ -151,14 +186,8 @@ class PanelData(ScrollbarFrame):
         # Remember this clases, inherits all properties from ScrollbarFrame,
         # so, it has one canvas.
         self.canvas.pack(expand=True,fill='both')
-        # Every time we make a modification size in the frame we change canvas size.
-        self.bind('<Configure>',self.update_canvas)
         # The horizontal scrollbar.
         self.create_scrollbar('x')
-        # If the pointer enters in the Canvas, the scrollbar is enabled.
-        self.canvas.bind('<Enter>',lambda event: self.enable_scroll_all(event,prefix='Shift-'))
-        # But diabled when it goes out.
-        self.canvas.bind('<Leave>',lambda event: self.disable_scroll_all(event,prefix='Shift-'))
         # We pack the frame that will cover all the canvas.
         # Remember if you want allocate more widgets inside any canvas we must employ
         # a frame to allot all widgets.
@@ -170,7 +199,7 @@ class PanelData(ScrollbarFrame):
         
         for sensor_name,sensor_number in sensors_metadata:
             # The all MeasureContainers will be inside of self.frame of this Panel, and
-            # the arrangement is one next to another, they are going to cover all the widget.
+            # the arrangement is one next to another, they are going to cover all the widgets.
             self.measure_cont=MeasureContainer(self,sensor_name,sensor_number)
             self.measure_cont.pack(side='left',expand=True,fill='both')
         
@@ -190,20 +219,25 @@ class PanelData(ScrollbarFrame):
             tags='horizontal'
         )
         # We update the canvas to not disconfigure the dimensions of the widgets.
+        # Every time we make a modification size in the frame we change canvas size.
+        self.bind('<Configure>',self.update_canvas)
+        self.horizontal_threshold = self.canvas.winfo_reqwidth()
+        self.vertical_threshold = self.canvas.winfo_reqheight()
+        self.update_canvas()
 
-    def update_canvas(self,*event):
+    def update_canvas(self,*events):
         '''
         The canvas is updated.
         '''
-        original_width_canvas = self.canvas.winfo_reqwidth()
         current_width_window=self.winfo_width()
-        if original_width_canvas>current_width_window :
+        if self.horizontal_threshold>current_width_window :
             # As the horizantal side is bigger than the part that is seen, we continue
             # using the width of the whole canvas.
-            current_width = original_width_canvas
+            current_width = self.horizontal_threshold
             self.scrollbar.place(x=0,rely=1,anchor='sw',relwidth=1)
+            # If the pointer enters in the Canvas, the scrollbar is enabled.
             self.canvas.bind('<Enter>',lambda event: self.enable_scroll_all(event,prefix='Shift-'))
-            # But diabled when it goes out.
+            # But disabled when it goes out.
             self.canvas.bind('<Leave>',lambda event: self.disable_scroll_all(event,prefix='Shift-'))
         else:
             # If it is the opposite, it means that the canvas that is shown in the window is bigger than
@@ -218,49 +252,12 @@ class PanelData(ScrollbarFrame):
                                width = current_width,
                                height = self.winfo_height()
                                )
-    
-        # With this function we can disable the scroll
-    def disable_scroll_all(self,event:tk.Event,prefix:str)->None:
-        '''
-        Scrollbar is disabled depending on the operative system.
-        '''
-        # For Windows or MacOs, we use the MouseWheel event.
-        # For Linux Operative Systems, Buttons 4 and 5 are used.
-        if self.system == "Windows" or self.system == 'Darwin':
-            self.canvas.unbind_all('<'+prefix+'MouseWheel>')
-        else:
-            self.canvas.unbind_all('<'+prefix+'Button-4>')
-            self.canvas.unbind_all('<'+prefix+'Button-5>')
-    
-    def enable_scroll_all(self,event:tk.Event,prefix:str)->None:
-        '''
-        Enable scrolling for the next operative systems:
-        1. Windows.
-        2. MacOs.
-        3. Linux.
-        Linux uses Buttons EVENTS meanwhile the others use MouseWheel EVENT
-        '''
-        # We determine canva's height and is compared with the current window height
-        if self.canvas.winfo_reqheight() > self.winfo_height():
-            # If the OS is either Windows or Darwin, we use MouseWheel EVENT
-            # Otherwise, Buttons are used (Linux)
-            if self.system == "Windows":
-                self.canvas.bind_all('<'+prefix+'MouseWheel>',lambda event: self.prefix_view_scroll[prefix](-int(event.delta/MOUSE_SPEED_WIN),'units'))
-            else :
-                self.canvas.bind_all('<'+prefix+'Button-4>',lambda event: self.prefix_view_scroll[prefix](-MOUSE_SPEED_LNX,'units'))
-                self.canvas.bind_all('<'+prefix+'Button-5>',lambda event: self.prefix_view_scroll[prefix](MOUSE_SPEED_LNX,'units'))
-        # This "else" is interesting because if we have the window higher than the original canvas height
-        # we disable the scrollbar.
-        else:
-            self.disable_scroll_all(event,prefix)
-        # We update the canvas.
-        # self.canvas.update_idletasks()
 
 class MeasureContainer(ScrollbarFrame):
     '''
     All meter widgets are contained here.
     '''
-    def __init__(self,panel_data,sensor_name,sensor_number):
+    def __init__(self,panel_data:PanelData,sensor_name:str,sensor_number:int)->None:
         # "panel_data" is the PanelData object of the previous one.
         self.panel_data = panel_data
         # We get sensor's name
@@ -276,7 +273,7 @@ class MeasureContainer(ScrollbarFrame):
         
         for number in range(sensor_number):
             # All meters are set according to their numbers.
-            self.meter = MeterVar(self.frame,
+            self.meter = ttk.Meter(self.frame,
                                  metertype = 'semi',
                                  metersize = self.meter_w_h,
                                  subtext = 'S'+str(number),
@@ -306,7 +303,7 @@ class MeasureContainer(ScrollbarFrame):
         self.scroll_height = self.height_canvas + self.panel_data.scrollbar.winfo_reqheight()+self.title.winfo_reqheight()
         # Even if we pulled all the scroll height, all widgets will be seen.
         # The threshold should include the panel data's height
-        self.threshold = self.scroll_height + self.panel_data.title.winfo_reqheight()
+        self.vertical_threshold = self.scroll_height + self.panel_data.title.winfo_reqheight()
         self.canvas.config(scrollregion =(0,0,0,self.scroll_height))
         # The window created is the frame with the same height as the canvas.
         self.id_meter_set = self.canvas.create_window(
@@ -318,56 +315,19 @@ class MeasureContainer(ScrollbarFrame):
             )
         
         # Enabling and disabling scrolls.
-        self.canvas.bind('<Enter>',lambda event: self.enable_scroll(event, prefix=''))
-        self.canvas.bind('<Leave>',lambda event: self.disable_scroll(event, prefix=''))
+        self.canvas.bind('<Enter>',lambda event: self.enable_scroll_all(event, prefix=''))
+        self.canvas.bind('<Leave>',lambda event: self.disable_scroll_all(event, prefix=''))
 
     def update_size(self,*event:tk.Event):
         "The canvas window object is redimensioned according to the window's size"
-        current_height=max(self.threshold,self.winfo_height())
+        current_height=max(self.vertical_threshold,self.winfo_height())
         self.canvas.itemconfig(self.id_meter_set,
                                width = self.winfo_width(),
                                height = current_height)
         self.canvas.update_idletasks()
 
-    def disable_scroll(self,event:tk.Event,prefix:str)->None:
-        '''
-        Scrollbar is disabled depending on the operative system.
-        '''
-        # For Windows or MacOs, we use the MouseWheel event.
-        # For Linux Operative Systems, Buttons 4 and 5 are used.
-        if self.system == "Windows" or self.system == 'Darwin':
-            self.canvas.unbind_all('<'+prefix+'MouseWheel>')
-        else:
-            self.canvas.unbind_all('<'+prefix+'Button-4>')
-            self.canvas.unbind_all('<'+prefix+'Button-5>')
-    
-    
-    def enable_scroll(self,event:tk.Event,prefix:str)->None:
-        '''
-        Enable scrolling for the next operative systems:
-        1. Windows.
-        2. MacOs.
-        3. Linux.
-        Linux uses Buttons EVENTS meanwhile the others use MouseWheel EVENT
-        '''
-        # We determine canva's height and is compared with the current window height
-        if self.threshold > self.winfo_height():
-            # If the OS is either Windows or Darwin, we use MouseWheel EVENT
-            # Otherwise, Buttons are used (Linux)
-            if self.system == "Windows":
-                self.canvas.bind_all('<'+prefix+'MouseWheel>',lambda event: self.prefix_view_scroll[prefix](-int(event.delta/MOUSE_SPEED_WIN),'units'))
-            else :
-                self.canvas.bind_all('<'+prefix+'Button-4>',lambda event: self.prefix_view_scroll[prefix](-MOUSE_SPEED_LNX,'units'))
-                self.canvas.bind_all('<'+prefix+'Button-5>',lambda event: self.prefix_view_scroll[prefix](MOUSE_SPEED_LNX,'units'))
-        # This "else" is interesting because if we have the window higher than the original canvas height
-        # we disable the scrollbar.
-        else:
-            self.disable_scroll(event,prefix)
-        # We update the canvas.
-        self.canvas.update_idletasks()
-
 class PanelPlot(ttk.Frame):
-    def __init__(self,parent):
+    def __init__(self,parent:GeneralContainer)->None:
         super().__init__(master = parent)
         # (Name of the sensor type , sensors' number)
         self.plot=Plot(self)
@@ -390,4 +350,3 @@ class Plot(Figure):
         
 if __name__ == '__main__':
     ChartsWindow().mainloop()
-    
