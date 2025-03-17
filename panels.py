@@ -63,16 +63,6 @@ class GeneralContainer(ttk.Frame):
             # PanelPlot is where the graphs are being plotted.
             PanelPlot(self).grid(row=ind,column=0,sticky='nswe')
 
-class MeterVar(ttk.Meter):
-    def __init__(self, parent,metertype,metersize,subtext,amountused,bootstyle):
-        super().__init__(
-            parent,
-            metertype = metertype,
-            metersize = metersize,
-            subtext = subtext,
-            amountused = amountused,
-            bootstyle = bootstyle)
-
 class ScrollbarFrame(ttk.Frame):
     '''
     The ScrollbarFrame is the father class.
