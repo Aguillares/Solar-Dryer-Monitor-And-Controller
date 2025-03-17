@@ -269,11 +269,12 @@ class MeasureContainer(ScrollbarFrame):
                                  subtext = 'S'+str(number),
                                  amountused = 50,
                                  bootstyle = COLOR_VAR_METERS[self.panel_data.var])
-            if self.system == 'Windows' or self.system == 'Darwin':
-                pass
-            else:
-                self.meter.subtext.place(relx=0.5,rely=0.76,anchor=tk.N)
-            self.meter
+            # self.meter.subtext.place(relx=0.5,rely=0.75,anchor=tk.N)
+            # if self.system == 'Windows' or self.system == 'Darwin':
+            #     pass
+            # else:
+            #     self.meter.subtext.place(relx=0.5,rely=0.76,anchor=tk.N)
+            # self.meter
             self.meter.pack()
         # If it is mapped, canvas_config is triggered, with sensor_number
         self.canvas.bind('<Map>', lambda ev: self.canvas_config(sensor_number))
