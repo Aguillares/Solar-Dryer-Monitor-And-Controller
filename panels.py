@@ -191,8 +191,8 @@ class PanelData(ScrollbarFrame):
         # We pack the frame that will cover all the canvas.
         # Remember if you want allocate more widgets inside any canvas we must employ
         # a frame to allot all widgets.
-        self.frame = ttk.Frame(self.canvas,name = 'panel_data')
-        self.frame.pack(fill='both',expand= True)
+        self.frame = ttk.Frame(self.canvas, name = 'panel_data')
+        self.frame.pack(fill = 'both',expand = True)
         # sensor_name: Sensor name (BME280,SHT45,...)
         # sensor_number: The number of sensors of that type.
         self.bind('<Map>',lambda event: self.placement())
@@ -279,6 +279,11 @@ class MeasureContainer(ScrollbarFrame):
                                  subtext = 'S'+str(number),
                                  amountused = 50,
                                  bootstyle = COLOR_VAR_METERS[self.panel_data.var])
+            if self.system == 'Windows' or self.system == 'Darwin':
+                pass
+            else:
+                self.meter.subtext.place(relx=0.5,rely=0.8,anchor=tk.N)
+            self.meter
             self.meter.pack()
         # If it is mapped, canvas_config is triggered, with sensor_number
         self.canvas.bind('<Map>', lambda ev: self.canvas_config(sensor_number))
