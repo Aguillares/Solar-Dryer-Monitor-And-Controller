@@ -282,7 +282,7 @@ class MeasureContainer(ScrollbarFrame):
             if self.system == 'Windows' or self.system == 'Darwin':
                 pass
             else:
-                self.meter.subtext.place(relx=0.5,rely=0.8,anchor=tk.N)
+                self.meter.subtext.place(relx=0.5,rely=0.76,anchor=tk.N)
             self.meter
             self.meter.pack()
         # If it is mapped, canvas_config is triggered, with sensor_number
