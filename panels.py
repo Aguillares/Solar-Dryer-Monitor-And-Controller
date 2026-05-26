@@ -28,7 +28,8 @@ class ChartsWindow(ttk.Toplevel):
         # Window geometry
         self.geometry(f'{win_width:.0f}x{win_height:.0f}+{win_x:.0f}+{win_y:.0f}')
         # Window minimum size.
-        self.minsize(f'{win_width*0.8:.0f}',f'{win_height*0.8:.0f}')
+        
+        self.minsize(f'{win_width*0.8:.0f}',f'{win_height*0.8:.0f}') # type: ignore
         self.sensors_metadata = {
             'T':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
             'RH':[('BME280',3),('SHT31',3),('BME680',2),('SHT45',5)],
@@ -104,15 +105,15 @@ class ScrollbarFrame(ttk.Frame):
         ttk.Label(self, font = font_, background = CONST_COLOR, text = title_).pack()
 
         # We give the orientation (vertical or horizontal)
-    def create_scrollbar(self,orient:dict[str,(str,callable)])->None:
+    def create_scrollbar(self,orient:dict[str,(str,callable)])->None: # type: ignore
         '''
         A scrollbar is created using PLACE method.
         '''
         # We use the dictionary "self.orientation" 
-        self.scrollbar = ttk.Scrollbar(self, orient=self.orientation[orient][0], command = self.orientation[orient][1],name=orient)
+        self.scrollbar = ttk.Scrollbar(self, orient=self.orientation[orient][0], command = self.orientation[orient][1],name=orient) # type: ignore
         self.scrollbar.place(x=0,rely=1,anchor='sw',relwidth=1)
-        # We set the (x/y)scrollcommand with the "scrollbar.set" method.
-        self.canvas.config({orient+'scrollcommand':self.scrollbar.set})
+        # We set the (x/y) scrollcommand with the "scrollbar.set" method.
+        self.canvas.config({orient+'scrollcommand':self.scrollbar.set}) # type: ignore
 
     def disable_scroll_all(self,event:tk.Event,prefix:str)->None:
         '''
@@ -135,7 +136,7 @@ class ScrollbarFrame(ttk.Frame):
         Linux uses Buttons EVENTS meanwhile the others use MouseWheel EVENT
         '''
         # We determine canva's height and is compared with the current window height
-        if self.vertical_threshold > self.winfo_height():
+        if self.vertical_threshold > self.winfo_height(): # type: ignore
             # If the OS is either Windows or Darwin, we use MouseWheel EVENT
             # Otherwise, Buttons are used (Linux)
             if self.system == "Windows":
@@ -177,7 +178,7 @@ class PanelData(ScrollbarFrame):
         # so, it has one canvas.
         self.canvas.pack(expand=True,fill='both')
         # The horizontal scrollbar.
-        self.create_scrollbar('x')
+        self.create_scrollbar('x') # type: ignore
         # We pack the frame that will cover all the canvas.
         # Remember if you want allocate more widgets inside any canvas we must employ
         # a frame to allot all widgets.
@@ -265,7 +266,7 @@ class MeasureContainer(ScrollbarFrame):
             # All meters are set according to their numbers.
             self.meter = ttk.Meter(self.frame,
                                  metertype = 'semi',
-                                 metersize = self.meter_w_h,
+                                  metersize = self.meter_w_h,
                                  subtext = 'S'+str(number),
                                  amountused = 50,
                                  bootstyle = COLOR_VAR_METERS[self.panel_data.var])
@@ -340,7 +341,7 @@ class Plot(Figure):
         dpi=fac_dpi)
         canvas = FigureCanvasTkAgg(self,master=parent)
         canvas.draw()
-        canvas.mpl_connect("key_press_event", key_press_handler)
+        canvas.mpl_connect("key_press_event", key_press_handler) # type: ignore
         self.tk_canvas=canvas.get_tk_widget()
         self.toolbar = NavigationToolbar2Tk(canvas,parent,pack_toolbar=False)
         
