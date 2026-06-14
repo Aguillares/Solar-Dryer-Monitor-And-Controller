@@ -50,14 +50,14 @@ class Psychometric():
         # Dew point temperature : Tpr [ºC]
         # Vapour pressure : Pv [Pa]
         # Temperature : Tbs [C]
-        
-        cond1 = find((-60<=Tbs)and(Tbs<=0));
-        cond2 = find((0<Tbs)&(Tbs<=70));
-        if ~isempty(cond1)
-        Tpr(cond1) = -60.45 + 7.0322.*log(Pv(cond1)) + 0.37.*((log(Pv(cond1))).^2);
-        end
-        if ~isempty(cond2)
-        Tpr(cond2) = -35.957 - 1.8726*log(Pv(cond2)) + 1.1689.*((log(Pv(cond2))).^2);
+        pass
+        # cond1 = find((-60<=Tbs)and(Tbs<=0));
+        # cond2 = find((0<Tbs)&(Tbs<=70));
+        # if ~isempty(cond1)
+        # Tpr(cond1) = -60.45 + 7.0322.*log(Pv(cond1)) + 0.37.*((log(Pv(cond1))).^2);
+        # end
+        # if ~isempty(cond2)
+        # Tpr(cond2) = -35.957 - 1.8726*log(Pv(cond2)) + 1.1689.*((log(Pv(cond2))).^2);
 
 
 

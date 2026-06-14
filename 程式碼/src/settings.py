@@ -1,5 +1,4 @@
 ''' -*-*-*-*-*-*-* Settings -*-*-*-*-*-*-* ''' 
-import tkinter as tk
 
 # -> Theme <-
 THEME_NAME = "solar_dryer"
@@ -41,7 +40,7 @@ SENSOR_NAME_FONT = ("Sensors_Name","Comic Sans MS",12)
 
 
 # -> Settings in widgets <-
-DATA_TRIGGER_SECTION = {'texts': ('Start','Time', 'Stop'),
+DATA_TRIGGER_SECTION = {'texts': ('Start', 'Time', 'Stop'),
                         'options': (('Start Now','Set Start'),('Trigger','Avg. Trigger'),('Stop','Set Stop')),
                         'background': ("#00422A","#8D8D8D","#5B2220"),
                         'style': ('success','','danger'),
@@ -57,20 +56,20 @@ TRIGGER_TIME = {'text': 'Data Trigger',
                 }
 
 BUTTONS_INFO = (
-    [('Fruit\nTemperature',(0,0),r'Icons\hot-and-cold.png'), 
-     ('Environmental\nVariables',(0,1),r'Icons\filter.png'),
-     ('Fruit Weight',(1,0),r'Icons\weight-scale.png'),
-     ('Psychometric \nChart',(1,1),r'Icons\graphical-presentation.png')]
+    [('Fruit\nTemperature',(0,0),'hot-and-cold.png'), 
+     ('Environmental\nVariables',(0,1),'filter.png'),
+     ('Fruit Weight',(1,0),'weight-scale.png'),
+     ('Psychometric \nChart',(1,1),'graphical-presentation.png')]
      )
 
 
 # -> Pattern <-
 PATTERN_TRIGGER = {
     # (Pattern,length)
-    'hour': ('^([0-1]?[0-9]?)$|(^2[0-3]$)',2),
-    'minute_trigger': ('^[0-5]?$',1),
-    'minute': ('^[1-5]?[0-9]?$',2),
-    'second': ('^[1-5]?[0-9]?$',2 )
+    'hour': ('^([0-1]?[0-9]?)$|(^2[0-3]$)'),
+    'minute_trigger': ('^[0-5]?$'),
+    'minute': ('^[1-5]?[0-9]?$'),
+    'second': ('^[1-5]?[0-9]?$')
 }
 
 
@@ -86,4 +85,3 @@ SHORTCUT_VARS = {
     'RH': 'Relative Humidity',
     'P': 'Pressure'
 }
- 

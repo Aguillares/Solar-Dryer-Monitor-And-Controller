@@ -14,7 +14,7 @@ import csv
 import re
 
 # ttkbootstrap replaces tk, with more appealing widgets.
-import ttkbootstrap as ttk
+# import ttkbootstrap as ttk
 
 # Module used to display possible errors in the code, and
 # to show it to the user.
@@ -52,28 +52,32 @@ from io import TextIOWrapper
 # For documention in functions
 from collections.abc import Callable
 
+# Path
+from pathlib import Path
+
+# Importing os to use directories
+import os
+
+from my_utils.display import show_elements
 
 class Monitor(ttk.Window):
     """
     The main window
 
-    ...
-
     Attributes
     ----------
-    screen_height : int
+    SCREEN_HEIGHT : int
         screen height of the current computer
 
-    screen_width : int
+    SCREEN_WIDTH : int
         screen width of the current computer
         
     init_path : str
         relative folder path (text file) where it stores the paths
         to get the previous selected database
 
-    menu : Menu
-        It is the upper toolbar to get access to the files
-        or more editing
+    options_menu : Menu
+        main panel, where we can display or get data
     
     """
     
@@ -83,9 +87,12 @@ class Monitor(ttk.Window):
         # If you don't put this,
         # you are not going to be able to make the window
         super().__init__(themename=THEME_NAME)
+        # Parent directory is the one that is two levels above
+        self._parent_dir = Path(__file__).parent.parent
+        self._data_dir = self._parent_dir
         # The screen sizes
-        self._SCREEN_HEIGHT = self.winfo_screenheight()
-        self._SCREEN_WIDTH = self.winfo_screenwidth()
+        self.SCREEN_HEIGHT = self.winfo_screenheight()
+        self.SCREEN_WIDTH = self.winfo_screenwidth()
 
         # We create the menu
         self._menubar = Menu(self)
@@ -93,13 +100,12 @@ class Monitor(ttk.Window):
         # In the first row we have the first part of the path
         # In the second row we have the file's name
         self._init_path = r"init_path.txt"
-
+        
         # FileManager is a class used to handle the file.
-        # Read
         with FileManager(self._init_path).read() as file:
             # --- COME BACK LATER ---
             # You need to improve the code when there's no table
-            self._read_line = file.readline()[:-1] + "/" + file.readline()
+            self._read_line = file.readline().split('/')
 
         self._data_variables = {
             # The syntax is the following:
@@ -108,8 +114,11 @@ class Monitor(ttk.Window):
             "_RH": ["Relative Humidity", [], []],
             "_P": ["Pressure", [], []],
         }
-
-        with FileManager(self._read_line).read() as file:
+        # Managing the data
+        for item in self._read_line:
+            self._data_dir=self._data_dir.joinpath(item)
+        
+        with FileManager(str(self._data_dir)).read() as file:
             # We convert the csv into "an array" through list.
             table = np.array(list(csv.reader(file, delimiter=",")))
             # The first four columns we have the date [day,month,year,time] header
@@ -128,15 +137,16 @@ class Monitor(ttk.Window):
             self._fill_data()
 
         # We get the height, width, x and y of the window.
-        self._MIN_WIN_HEIGHT = self._SCREEN_HEIGHT * 0.5 * 0.95
-        self._MIN_WIN_WIDTH = self._SCREEN_WIDTH * 0.45 * 0.95
-        self._INIT_POS_X = self._SCREEN_WIDTH / 2 - self._MIN_WIN_WIDTH / 2
-        self._INIT_POS_Y = self._SCREEN_HEIGHT / 2 - self._MIN_WIN_HEIGHT / 2
+        self._INIT_WIN_HEIGHT = self.SCREEN_HEIGHT * 0.55
+        self._INIT_WIN_WIDTH = self.SCREEN_WIDTH * 0.6
+        self._INIT_POS_X = self.SCREEN_WIDTH / 2 - self._INIT_WIN_WIDTH / 2
+        self._INIT_POS_Y = self.SCREEN_HEIGHT / 2 - self._INIT_WIN_HEIGHT / 2
+        # The real origin is at (-9,0)
         self.geometry(
-            f"{self._MIN_WIN_WIDTH:.0f}x{self._MIN_WIN_HEIGHT:.0f}+{(self._INIT_POS_X):.0f}+{(self._INIT_POS_Y):.0f}"
+            f"{self._INIT_WIN_WIDTH:.0f}x{self._INIT_WIN_HEIGHT:.0f}+{self._INIT_POS_X:.0f}+{self._INIT_POS_Y:.0f}"
         )
-        # The minsize of the window, 95% of the got dimensions.
-        self.minsize(int(self._MIN_WIN_WIDTH*.95),int(self._MIN_WIN_HEIGHT*.95))
+        # The minsize of the window, 80% of the got dimensions.
+        self.minsize(int(self._INIT_WIN_WIDTH*.8),int(self._INIT_WIN_HEIGHT*.8))
         # The title of GUI
         self.title("Solar Dryer")
         # We create the options menu
@@ -148,7 +158,7 @@ class Monitor(ttk.Window):
         """
         Function to fill data into the dictionary 
         the different variables are:
-
+        
         _T: Temperature
         
         _RH: Relative Humidity
@@ -170,19 +180,12 @@ class Monitor(ttk.Window):
     def _detection(self,var_type:str,header_var:str,col:int)->None:
         """We assign all values according to their variable type
         
-        Parameters
-        ----------
-        
-        var_type : str 
-            The variable type, could be pressure (_P), 
-            relative humidity (_RH) or temperature (_T)
+        Parameters:
+            var_type (str): The variable type, could be pressure (_P), relative humidity (_RH) or temperature (_T)
+                
+            header_var (str): It is the whole header, example: BME280_2_1_T
             
-        header_var : str
-            It is the whole header, example:
-            BME280_2_1_T
-        
-        col : int
-            This is the column where all data is located
+            col (int): This is the column where all data is located
         """
         # We append the sensor's name
         self._data_variables[var_type][1].append(header_var)
@@ -192,11 +195,10 @@ class Monitor(ttk.Window):
         )
 
     def _create_panel(self)->None:
-        """The upper menu is made"""
-        self.options_menu = OptionsMenu(self).pack(expand=True, fill="both")
+        """The main panel is made"""
+        self.options_menu = OptionsMenu(self,self._parent_dir).pack(expand=True, fill="both")
 
-def _decorator_check_num(fun:Callable[[type,list[tk.IntVar],str,str,str],bool])->\
-Callable[[list[tk.IntVar],str,str,str],bool]:
+def _decorator_check_num(fun:Callable[[object,list[tk.IntVar],str,str,str],bool]) -> Callable[[object,list[tk.IntVar],str,str,str],bool]:
     """
     Non-public function, to validate the entry
     the user types in the combobox
@@ -204,7 +206,7 @@ Callable[[list[tk.IntVar],str,str,str],bool]:
     Parameters
     ----------
     
-    fun : Callable[[list[tk.IntVar],str,str,str],bool]
+    fun : Callable[[object,list[tk.IntVar],str,str,str],bool]
         The function used is the non-public function
         to check out the numbers typed while using
         comboboxes as in either trigger or set options
@@ -212,11 +214,11 @@ Callable[[list[tk.IntVar],str,str,str],bool]:
     Return
     ------
     
-    wrapper : Callable[[list[tk.IntVar],str,str,str],bool]
+    wrapper : Callable[[object,list[tk.IntVar],str,str,str],bool]
         The function returned is an upgraded function of the one
         original given previously"""
         
-    def _wrapper(self:type,textvars:list[tk.IntVar],value:str, op:str, widget_name:str):
+    def _wrapper(self, textvars:list[tk.IntVar],value:str, op:str, widget_name:str)->bool:
         """
         This function is retrieved to call the function given
         in the decorator function
@@ -251,6 +253,7 @@ Callable[[list[tk.IntVar],str,str,str],bool]:
         logic=fun(self,textvars,value, op, widget_name)
 
         return logic
+
     return _wrapper
 
 @_decorator_check_num
@@ -293,7 +296,6 @@ def _check_num(self,textvars:list[tk.IntVar],value:str, op:str, widget_name:str)
         self.after_idle(lambda:temp_obj.set(int(0)))
         return True
     
-
     # -> Identifying match <-
 
     # We remove all characters after the first underscore
@@ -305,35 +307,35 @@ def _check_num(self,textvars:list[tk.IntVar],value:str, op:str, widget_name:str)
         name_found = name_found + '_trigger'
     
     # We get the pattern and the maximum number of digits
-    pattern,maxlen=PATTERN_TRIGGER[name_found]
+    pattern,=PATTERN_TRIGGER[name_found]
     match = re.match(pattern, value)
 
     # We need to know if there's a match
     # and the number of digits.
+    
     logic = (
-        match is not None and len(value) <= maxlen
+        match is not None
     )
     
     return logic
 class OptionsMenu(ttk.Frame):
     """This class is the main menu to select
     the different options"""
-    def __init__(self, parent):
+    def __init__(self, parent:Monitor, parent_dir:Path)->None:
+        # Icons' directory
+        self.parent_dir_icons = parent_dir.joinpath('asset','Icons')
         # The parent is the window.
         self.parent = parent
         # We use it as master, the inheritance is applied
         super().__init__(parent,name='optionsMenu')
-        
-        # In this frame will be contained all the several sections
-        self.options_menu_frame = ttk.Frame(self, name="options_menu_frame")
-        self.options_menu_frame.pack(fill="both", expand=True)
-        self.options_menu_frame.grid_columnconfigure(0, uniform="a", weight=2)
-        self.options_menu_frame.grid_columnconfigure(1, uniform="a", weight=1)
-        self.options_menu_frame.grid_rowconfigure((0, 1), weight=1)
-
+        self.pack(fill="both",expand=True)
+        self.grid_columnconfigure(0, uniform="a", weight=2)
+        self.grid_columnconfigure(1, uniform="a", weight=1)
+        self.grid_rowconfigure((0, 1),weight=1)
+       
         # All options of trigger: {start, time, stop}
         self.trigger_sections_main_frame = ttk.Labelframe(
-            self.options_menu_frame, name="options", text="Trigger Settings"
+            self, name="trigger_sections_main_frame", text="Trigger Settings"
         )
         self.trigger_sections_main_frame.grid(
             row=0, column=0, sticky="nesw", padx=10, pady=5
@@ -353,7 +355,7 @@ class OptionsMenu(ttk.Frame):
         self.selection_time = {"Set start": None, "Set stop": None}
 
         # The variables that are used to store these values,
-        # It is for the the date, hour, minute and second
+        # It is for the date, hour, minute and second
         # for both.
         self.selection_time_vars = {
             "set_start": [
@@ -399,7 +401,7 @@ class OptionsMenu(ttk.Frame):
             )
         self.style.configure("TLabelframe.Label", font=("Impact", 12))
         self.style.configure(
-            "Time.TLabel", font=("Comic Sans MS bold", int(15))
+            "Time.TLabel", font=("Comic Sans MS bold", int(15)),background=DATA_TRIGGER_SECTION["background"][1]
         )
 
         self.time_values = [
@@ -409,131 +411,15 @@ class OptionsMenu(ttk.Frame):
             ttk.IntVar(name="second_avg_trigger", value=0),
         ]
     
-        indx_trigger_values = 0
-        indx_trigger_btns = 0
+        self.indx_trigger_values = 0
+        self.indx_trigger_btns = 0
         self.trigger_values_comboboxes = []
         self.indx_array = []
         self.trigger_buttons = []
-
-        for val in self.time_values:
-            print(f"The type is -> {str(val)=='trigger_min'}")
             
-        for i in range(3):
-            self.trigger_sections_frame.append(
-                ttk.Labelframe(
-                    self.trigger_sections_main_frame,
-                    name="trigger_section_" + str(i),
-                    text=DATA_TRIGGER_SECTION["texts"][i],
-                    style=f"{DATA_TRIGGER_SECTION['texts'][i]}.TLabelframe",
-                    borderwidth=0,
-                )
-            )
-            self.trigger_sections_frame[i].grid(
-                row=0,
-                column=DATA_TRIGGER_SECTION["column"][i],
-                sticky="nesw",
-                padx=10,
-                pady=10,
-            )
-            self.trigger_sections_frame[i].rowconfigure(
-                list(range(4)), uniform="a", weight=1
-            )
-            self.trigger_sections_frame[i].columnconfigure(
-                list(range(2)), uniform="a", weight=1
-            )
-
-            for ind, option_name in enumerate(
-                DATA_TRIGGER_SECTION["options"][i]
-            ):
-                plus = 1
-                if i == 1:
-                    print(f"Option name = {option_name}")
-                    ind == 0 and self.trigger_sections_frame[i].rowconfigure(
-                        list(range(4)), uniform="a", weight=1)  
-                    ind == 0 and self.trigger_sections_frame[i].columnconfigure(
-                        list(range(2)), uniform="a", weight=1) 
-                    row_label = ind * 2
-                    ttk.Label(
-                        self.trigger_sections_frame[i],
-                        text=option_name,
-                        style="Time.TLabel",
-                    ).grid(column=0, row=row_label, columnspan=2)
-                
-                    check_num_wrapper = (
-                        self.parent.register(
-                            lambda value, op, widget_name: 
-                            _check_num(
-                                self,
-                                self.time_values,
-                                       value,
-                                       op,
-                                       widget_name)),
-                                       "%P",
-                                       "%V",
-                                       "%W",
-                                       )
-                    modified_option_name = (
-                        option_name.lower().replace(" ", "").replace(".", "_")
-                    )
-                    try:
-                        for range_time, boo, name in zip(
-                            (SHORT_MIN_RANGE,SEC_RANGE),
-                            range(2),
-                            (
-                                "minute_" + modified_option_name,
-                                "second_" + modified_option_name,
-                            ),
-                        ):
-                            print(f"Given name = {name}")
-                            self.trigger_values_comboboxes.append(
-                                ttk.Combobox(
-                                    self.trigger_sections_frame[i],
-                                    name=name,
-                                    textvariable=self.time_values[
-                                        indx_trigger_values
-                                    ],
-                                    state="normal",
-                                    values=range_time,
-                                    width=20,
-                                    validate="all",
-                                    validatecommand=check_num_wrapper,
-                                )
-                            )
-                            self.indx_array.append(indx_trigger_values)
-                            self.trigger_values_comboboxes[
-                                indx_trigger_values
-                            ].bind(
-                                "<<ComboboxSelected>>",
-                                self.update_combobox_value,
-                            )
-                            self.trigger_values_comboboxes[
-                                indx_trigger_values
-                            ].grid(column=boo, row=row_label + 1, padx=5)
-                            indx_trigger_values += 1
-                    except Exception as e:
-                        print(e)
-                    continue
-
-                self.trigger_buttons.append(
-                    ttk.Button(
-                        self.trigger_sections_frame[i],
-                        text=option_name,
-                        style=DATA_TRIGGER_SECTION["style"][i],
-                        state="normal",
-                        cursor="hand2",
-                    )
-                )
-
-                self.trigger_buttons[indx_trigger_btns].grid(
-                    column=0,
-                    row=ind * 2,
-                    columnspan=2,
-                    rowspan=2,
-                    sticky="nsew",
-                    pady=15,
-                )
-                indx_trigger_btns += 1
-
+        self.create_trigger_section()
+        self.styling()
+        
         self.trigger_buttons[0].config(command=self.start_fun)
         self.trigger_buttons[1].config(
             command=lambda: self.set_time(
@@ -546,8 +432,36 @@ class OptionsMenu(ttk.Frame):
                 "Set stop", 3, DATA_TRIGGER_SECTION["style"][2]
             )
         )
+        
+        self.create_plot_section()
+        self.create_preview_section()
+        # # Time variables
+        # self.start_time = []
+        # self.stop_time = []
+
+        # for name in ("hour_", "minute_", "second_"):
+        #     self.start_time.append(ttk.IntVar(name=name + "start", value=0))
+        #     self.stop_time.append(ttk.IntVar(name=name + "stop", value=0))
+        # # Date variables
+        # self.start_date = datetime.now().strftime("%x")
+        # self.stop_date = self.start_date
+    
+    def create_preview_section(self):
+        # Table Preview
+        self.preview_table_frame = ttk.Labelframe(
+            self, name="preview_table_frame", text="Preview"
+        )
+        self.preview_table_frame.grid(
+            row=0, column=1, rowspan=2, sticky="nswe", pady=5, padx=5
+        )
+        self.preview_table = ttk.Treeview(self.preview_table_frame)
+        self.preview_table.pack(expand=True, fill="both", padx=10, pady=10)
+
+        self.print_value = 0
+
+    def create_plot_section(self):
         plots_frame_section = ttk.Labelframe(
-            self.options_menu_frame, name="plots_frame", text="Plots"
+            self, name="plots_frame", text="Plots"
         )
         plots_frame = ttk.Frame(plots_frame_section)
         plots_frame.rowconfigure((0, 1), uniform="a", weight=1)
@@ -561,19 +475,13 @@ class OptionsMenu(ttk.Frame):
         self.images_tk = []
         self.image_size = (60, 70)
         self.speed = 0.8
-        self.style.configure(
-            "TButton",
-            font=("Comic Sans MS bold", 15),
-            justify="center",
-            compound="left",
-        )
         self.symmetric_text(BUTTONS_INFO)
         self.buttons = []
 
         for i, button_info in enumerate(BUTTONS_INFO):
             # This is saved in an array because we want the images to appeared in the buttons.
             # If they are not saved, they disappear.
-            self.images.append(Image.open(button_info[2]))
+            self.images.append(Image.open(self.parent_dir_icons.joinpath(button_info[2])))
             # We resize and save the images in the array.
             self.images_tk.append(
                 ImageTk.PhotoImage(self.images[i].resize(self.image_size))
@@ -605,29 +513,152 @@ class OptionsMenu(ttk.Frame):
         self.changes_number = 2
         # This property lets us modify the number of changes the window suffer either it's moved or its size is changed.
         self.activate = True
+                            
+    def create_trigger_section(self):
+        for section_text,section_column,options,style_ in zip(DATA_TRIGGER_SECTION["texts"],DATA_TRIGGER_SECTION["column"],DATA_TRIGGER_SECTION["options"],DATA_TRIGGER_SECTION["style"]):
+            frame_name= "trigger_section_" + section_text.lower()
+            self.trigger_sections_frame.append(
+                ttk.Labelframe(
+                    self.trigger_sections_main_frame,
+                    name=frame_name,
+                    text=section_text,
+                    style=f"{section_text}.TLabelframe",
+                    borderwidth=0,
+                )
+            )
+            current_frame = self.trigger_sections_main_frame.nametowidget(frame_name)
+            current_frame.grid(
+                row=0,
+                column=section_column,
+                sticky="nesw",
+                padx=10,
+                pady=10,
+            )
+            current_frame.rowconfigure(
+                list(range(4)), uniform="a", weight=1
+            )
+            current_frame.columnconfigure(
+                list(range(2)), uniform="a", weight=1
+            )
 
-        # Table Preview
-        self.preview_table_frame = ttk.Labelframe(
-            self.options_menu_frame, name="preview_table_frame", text="Preview"
+            for ind, option_name in enumerate(
+                options
+            ):
+                if 'Trigger' in option_name:
+                    row_label = ind * 2
+                    ttk.Label(
+                        current_frame,
+                        text=option_name,
+                        style="Time.TLabel",
+                    ).grid(column=0, row=row_label, columnspan=2)
+                
+                    check_num_wrapper = (
+                        self.parent.register(
+                            lambda value, op, widget_name: 
+                            _check_num(
+                                self,
+                                self.time_values,
+                                       value,
+                                       op,
+                                       widget_name)),
+                                       "%P",
+                                       "%V",
+                                       "%W",
+                                       )
+                    modified_option_name = (
+                        option_name.lower().replace(" ", "").replace(".", "_")
+                    )
+                    try: 
+                        for range_time, boo, name in zip(
+                            (SHORT_MIN_RANGE,SEC_RANGE),
+                            range(2),
+                            (
+                                "minute_" + modified_option_name,
+                                "second_" + modified_option_name,
+                            ),
+                        ):
+                            
+                            self.trigger_values_comboboxes.append(
+                                ttk.Combobox(
+                                    current_frame,
+                                    name=name,
+                                    textvariable=self.time_values[
+                                        self.indx_trigger_values
+                                    ],
+                                    state="normal",
+                                    values=range_time,
+                                    width=20,
+                                    validate="all",
+                                    validatecommand=check_num_wrapper,
+                                )
+                            )
+                            self.indx_array.append(self.indx_trigger_values)
+                            self.trigger_values_comboboxes[
+                                self.indx_trigger_values
+                            ].bind(
+                                "<<ComboboxSelected>>",
+                                self.update_combobox_value,
+                            )
+                            self.trigger_values_comboboxes[
+                                self.indx_trigger_values
+                            ].grid(column=boo, row=row_label + 1, padx=5)
+                            self.indx_trigger_values += 1
+                    except Exception as e:
+                        print(e)
+                    continue
+
+                self.trigger_buttons.append(
+                    ttk.Button(
+                        current_frame,
+                        text=option_name,
+                        style=style_,
+                        state="normal",
+                        cursor="hand2",
+                    )
+                )
+
+                self.trigger_buttons[self.indx_trigger_btns].grid(
+                    column=0,
+                    row=ind * 2,
+                    columnspan=2,
+                    rowspan=2,
+                    sticky="nsew",
+                    pady=15,
+                )
+                self.indx_trigger_btns += 1
+
+    def styling(self):
+        # The object "style" is used to modify 
+        # the different styles as frames, labels, etcetera.
+        self.style = ttk.Style()
+        
+        for name, background in zip(
+            DATA_TRIGGER_SECTION["texts"], DATA_TRIGGER_SECTION["background"]
+        ):
+            self.style.configure(
+                f"{name}" + ".TLabelframe",
+                padding=8,
+                relief="sunken",
+                background=background,
+            )
+            self.style.configure(
+                f"{name}" + ".TLabelframe.Label",
+                font=("Comic Sans MS bold", 10),
+                background=background,
+                foreground="white",
+            )
+        self.style.configure("TLabelframe.Label", font=("Impact", 12))
+        self.style.configure(
+            "Time.TLabel", font=("Comic Sans MS bold", int(15)),background=DATA_TRIGGER_SECTION["background"][1]
         )
-        self.preview_table_frame.grid(
-            row=0, column=1, rowspan=2, sticky="nswe", pady=5, padx=5
+        self.style.configure(
+            "TButton",
+            font=("Comic Sans MS bold", 15),
+            justify="center",
+            compound="left",
         )
-        self.preview_table = ttk.Treeview(self.preview_table_frame)
-        self.preview_table.pack(expand=True, fill="both", padx=10, pady=10)
 
-        self.print_value = 0
 
-        # Time variables
-        self.start_time = []
-        self.stop_time = []
-        for name in ("hour_", "minute_", "second_"):
-            self.start_time.append(ttk.IntVar(name=name + "start", value=0))
-            self.stop_time.append(ttk.IntVar(name=name + "stop", value=0))
-        # Date variables
-        self.start_date = datetime.now().strftime("%x")
-        self.stop_date = self.start_date
-    
     def update_combobox_value(self, ev):
         print(f"GETTING NUMBER => {ev.widget.selection_get()}")
 
@@ -667,16 +698,15 @@ class OptionsMenu(ttk.Frame):
         except Exception as e:
             print(f"You need to specify a correct time trigger")
             self.parent.focus_set()
-            ttk.dialogs
             message = Messagebox()
             message.show_error(
                 message="Sorry, you need to establish a correct time for the trigger",
                 parent=self.parent,
             )
 
-    def set_time(self, name, indx, style):
-        self.selection_time[name] = SelectionTime(self.parent, self, name, style)
-        self.selection_time[name].bind("<Destroy>", lambda ev: self.enable_btn(indx))
+    def set_time(self, name:str, indx, style):
+        self.selection_time[name] = SelectionTime(self.parent, self, name, style)  # type: ignore
+        self.selection_time[name].bind("<Destroy>", lambda ev: self.enable_btn(indx)) # type:ignore
         self.print_value = 0
         self.trigger_buttons[indx].config(state=ttk.DISABLED)
 
@@ -726,7 +756,7 @@ class OptionsMenu(ttk.Frame):
                     self.changes_number = 30
                     self.activate = False
                 # We chose the width_factor since with the height_factor the letters were bigger than the buttons.
-                width_factor = parent_width / self.parent._MIN_WIN_WIDTH
+                width_factor = parent_width / self.parent._INIT_WIN_WIDTH
                 width_factor = 1.4 if width_factor > 1.4 else width_factor
                 # We reset changes_counter
                 self.changes_counter = 0
@@ -772,7 +802,7 @@ class OptionsMenu(ttk.Frame):
 
 
 class SelectionTime(ttk.Toplevel):
-    def __init__(self, window, father, name, cal_style):
+    def __init__(self, window, father, name_var, cal_style):
         self.window = window
         self.father = father
       
@@ -788,17 +818,25 @@ class SelectionTime(ttk.Toplevel):
         self.geometry(
             f"{width:.0f}x{height:.0f}+{self.pos_x:.0f}+{self.pos_y:.0f}"
         )
-        self.name = name.lower().replace(' ','_')
+        self.name = name_var.lower().replace(' ','_')
         self.resizable(False, False)
-        self.title(name)
+        self.title(name_var)
         self.rowconfigure(0, weight=7, uniform="a")
         self.rowconfigure(1, weight=3, uniform="a")
         self.columnconfigure(0, weight=2, uniform="a")
         self.columnconfigure(1, weight=3, uniform="a")
 
         # 
-        print(f"The name is {name.lower().replace(' ','_') }")
+        print(f"The name is {name_var.lower().replace(' ','_') }")
         
+        dt_time = datetime.time(datetime.now())
+        current_time = {
+            'hour': dt_time.hour,
+            'minute': dt_time.minute,
+            'second': dt_time.second
+        }
+        for var in ['hour','minute','second']:
+            self.window.setvar(var+'_'+self.name.rsplit('_')[1],value=current_time[var])
     
         # check_num_wrapper
         check_num_wrapper = (
@@ -955,15 +993,21 @@ class SelectionTime(ttk.Toplevel):
             print(f"{val} = {val.get()}")
 
 
-class Menu(ttk.Frame):
+class Menu(ttk.Menu):
+    """_Menu_
+
+    Args:
+        parent (ttk.Window): It is the main window
+    """
 
     def __init__(self, parent):
-        self.parent = parent
-        super().__init__(parent)
-        # Menu
-        self.menu = ttk.Menu(parent)
-        parent.configure(menu=self.menu)
-        self.menuContainer = ttk.Menu(self, tearoff=False)
+        # Inheritance is initialized
+        super().__init__(parent,name='upper_menu')
+        # First we set the menu in the window, but until now, it will not appear, it is hidden, we need another menu to make it appear.
+        parent.configure(menu=self)
+        
+        # menuContainer holds all options.
+        self.menuContainer = ttk.Menu(self)
         self.menuContainer.add_command(
             label="New", command=lambda: self.new_file()
         )
@@ -972,11 +1016,10 @@ class Menu(ttk.Frame):
         )
         # With "File" you can open a previous table
         # or making a new one
-        self.menu.add_cascade(label="File", menu=self.menuContainer)
+        self.add_cascade(label="File", menu=self.menuContainer)
 
-        # Submenugit
-
-    def open_file(self):
+    def open_file(self)->None:
+        """It opens the file where data is located"""
         # --TODO-- You have to find a way to let the last file's directory to be the init directory
         self.open_dialog = filedialog.askopenfilename(
             title="Open a file",
@@ -986,28 +1029,9 @@ class Menu(ttk.Frame):
                 ("Comma-separated values", "*.csv"),
             ),
         )
-
-        print(self.open_dialog)
-
-    def humidity(self, screen_width, screen_height):
-        self.humidity_chart = Humidity(screen_width, screen_height)
-
-    def temperatures(self, screen_width, screen_height):
-        self.temperatures_chart = Temperature(
-            screen_width, screen_height
-        )  # type:ignore
-
-    def psychrometric(self):
-        self.psychrometric_chart = Psychrometric()
-        self.plot_psy = self.psychrometric_chart
-
-    def weight(self, screen_width, screen_height):
-        self.weight_chart = Weight(screen_width, screen_height)
-
-    def all(self, screen_width, screen_height):
-        self.all = All(screen_width, screen_height)  # type:ignore
-
+        
     def new_file(self):
+        """A new file is  created."""
         # --TODO-- It has to start an empty
         pass
 
@@ -1015,14 +1039,37 @@ class Menu(ttk.Frame):
 class Psychrometric(Monitor):
     def __init__(self):
         super().__init__()
-        self.psy_height = self._SCREEN_HEIGHT * 0.42
-        self.psy_width = self._SCREEN_WIDTH * 0.33
+        self.psy_height = self.SCREEN_HEIGHT * 0.42
+        self.psy_width = self.SCREEN_WIDTH * 0.33
         self.geometry(
             f"{self.psy_width:.0f}x{self.psy_height:.0f}\
-                      +{(self._INIT_POS_X-(self._MIN_WIN_WIDTH+self.psy_width)/2+15):.0f}+{(self._INIT_POS_Y):.0f}"
+                      +{(self._INIT_POS_X-(self._INIT_WIN_WIDTH+self.psy_width)/2+15):.0f}+{(self._INIT_POS_Y):.0f}"
         )
-        print(f"Psy width = {self._MIN_WIN_WIDTH},Psy height = {self._MIN_WIN_HEIGHT}")
+        print(f"Psy width = {self._INIT_WIN_WIDTH},Psy height = {self._INIT_WIN_HEIGHT}")
         self.title("Psychrometric Chart")
+
+class Weight(Monitor):
+    def __init__(self, screen_width, screen_height):
+        super().__init__()
+
+
+class Humidity(ttk.Window):
+    def __init__(self, screen_width, screen_height):
+        super().__init__()
+        self.win_width = 100
+        self.win_height = 200
+        self.screen_width = screen_width
+        self.screen_height = screen_height
+        self.geometry(
+            f"{self.win_width:.0f}x{self.win_height:.0f}\
+                      +{(self.screen_width/2-self.win_width/2):.0f}+{(self.screen_height/2-self.win_height/2):.0f}"
+        )  # type: ignore
+
+
+class Temperature(ttk.Window):
+    def __init__(self,screen_width,screen_height):
+        super().__init__()
+
 
 
 class FileManager(object):
@@ -1067,34 +1114,5 @@ class FileManager(object):
 
     def __exit__(self) -> None:
         self.file.close()
-
-
-class Weight(Monitor):
-    def __init__(self, screen_width, screen_height):
-        super().__init__()
-
-
-class Humidity(ttk.Window):
-    def __init__(self, screen_width, screen_height):
-        super().__init__()
-        self.win_width = 100
-        self.win_height = 200
-        self.geometry(
-            f"{self.win_width:.0f}x{self.win_height:.0f}\
-                      +{(self.screen_width/2-self.win_width/2):.0f}+{(self.screen_height/2-self.win_height/2):.0f}"
-        )  # type: ignore
-
-
-class Temperature(ttk.Window):
-    def __init__(self):
-        super().__init__()
-
-
-class All:
-    def __init__(self):
-        self.temperature = Temperature()
-        self.psychrometric = Psychrometric()
-        self.humidity = Humidity()  # type: ignore
-        self.psychrometric = Psychrometric()
 
 monitor=Monitor()

@@ -23,7 +23,8 @@ class Dog_Watcher():
     def __init__(self):
         self.connected_sensors = ['BME280','SHT31','MLX90614']
         # You need to change your initial path
-        self.slash = '/'
+        """_summary_
+        """        self.slash = '/'
         self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
         self.extension ='.csv' 
         self.attempt_init = 1
@@ -583,4 +584,5 @@ if __name__ == "__main__":
         print("Exiting...")
         GPIO.cleanup()
     
-        
+        """_summary_
+        """        
