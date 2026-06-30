@@ -24,7 +24,8 @@ class Dog_Watcher():
         self.connected_sensors = ['BME280','SHT31','MLX90614']
         # You need to change your initial path
         """_summary_
-        """        self.slash = '/'
+        """
+        self.slash = '/'
         self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
         self.extension ='.csv' 
         self.attempt_init = 1
