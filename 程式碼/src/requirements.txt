@@ -1,0 +1,9 @@
+adafruit_bme280==1.0.1
+board==1.0
+hx711==1.0.0
+matplotlib==3.10.9
+git+ssh://git@github.com/Aguillares/my_utils.git
+numpy==2.4.6
+Pillow==12.2.0
+smbus2==0.6.1
+ttkbootstrap==1.10.1
