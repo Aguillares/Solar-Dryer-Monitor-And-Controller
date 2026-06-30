@@ -17,6 +17,7 @@ import numpy as np
 import csv
 import adafruit_tca9548a
 from adafruit_sht31d import SHT31D
+from pathlib import Path
 
 
 class Dog_Watcher():
@@ -74,16 +75,32 @@ class Dog_Watcher():
         print(f"Header = {self.header}")
         self.create_header()
         print(f"Header = {self.header}")
-        with FileManager(self.init_path).read() as init_path_file:
-                self.path = init_path_file.readline()[:-1]
-                self.file_name = init_path_file.readline()
-                
-                if new == True:
-                    self.file_detection(2) # The two is in case there's already a one file there.
         
+        # Parent directory is the one that is two levels above
+        self._parent_dir = Path(__file__).parent.parent
+        self._data_dir = self._parent_dir
+        
+        with FileManager(self.init_path).read() as file: 
+            self._read_line = file.readline().split('/')
+            
+            # Creating the real data directory with the pieces of information
+            # given by "init_path.txt"
+            for item in self._read_line:
+                self._data_dir = self._data_dir.joinpath(item)
+                 
+            if new == True:
+                self.file_detection(2)
+#         with FileManager(self.init_path).read() as file:
+#                 self.path = init_path_file.readline()[:-1]
+#                 self.file_name = init_path_file.readline()
+#                 
+#                 if new == True:
+#                     self.file_detection(2) # The two is in case there's already a one file there.
+
+         
         # What would it happen if we have two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
-        with FileManager(self.full_path_file).read() as data_file:
+        with FileManager(str(self._data_dir)).read() as data_file:
             header = data_file.readline()
             header = re.sub('\s+','',header.strip())
             # There's a double check if it is able to write on the document
@@ -201,9 +218,9 @@ class Dog_Watcher():
     def file_detection(self,replica_number):
         # Here you should modify it depending of the directory.
         try:
-            self.set_full_path_file(self.path + self.slash + self.file_name)
             
-            with FileManager(self.full_path_file).detect() as file:
+            
+            with FileManager(str(self._data_dir)).detect() as file:
                 file.write(self.header+'\n')
                 print(f"Header = {self.header}")
                 print("Successfully created!!")
