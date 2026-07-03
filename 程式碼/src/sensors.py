@@ -27,7 +27,7 @@ class Dog_Watcher():
         """_summary_
         """
         self.slash = '/'
-        self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
+        self.init_path = r'init_path.txt'
         self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
@@ -78,16 +78,28 @@ class Dog_Watcher():
         
         # Parent directory is the one that is two levels above
         self._parent_dir = Path(__file__).parent.parent
+        print(f"_parent_dir = {self._parent_dir}")
+        
         self._data_dir = self._parent_dir
+        print(f"_data_dir = {self._data_dir}")
         
         with FileManager(self.init_path).read() as file: 
             self._read_line = file.readline().split('/')
             
+            print(f"_read_line = {self._read_line}")
             # Creating the real data directory with the pieces of information
             # given by "init_path.txt"
             for item in self._read_line:
+                print(f"item = {item}")
                 self._data_dir = self._data_dir.joinpath(item)
-                 
+            
+            
+            print(f"_data_dir = {self._data_dir}")
+            self.file_name = self._data_dir.stem + self._data_dir.suffix
+            print(f"file_name = {self.file_name}")
+            self._parent_data_dir = self._data_dir.parent
+            
+            print(f"self._parent_data_dir = {self._parent_data_dir}")
             if new == True:
                 self.file_detection(2)
 #         with FileManager(self.init_path).read() as file:
@@ -95,7 +107,7 @@ class Dog_Watcher():
 #                 self.file_name = init_path_file.readline()
 #                 
 #                 if new == True:
-#                     self.file_detection(2) # The two is in case there's already a one file there.
+#                     self.file_detection(2) # The two is in case there's already one file there.
 
          
         # What would it happen if we have two files with the same name, but differet headers?
@@ -218,25 +230,35 @@ class Dog_Watcher():
     def file_detection(self,replica_number):
         # Here you should modify it depending of the directory.
         try:
+            self.set_full_path_file(self._parent_data_dir.joinpath(self.file_name))
             
-            
-            with FileManager(str(self._data_dir)).detect() as file:
+            with FileManager(self.full_path_file).detect() as file:
                 file.write(self.header+'\n')
                 print(f"Header = {self.header}")
                 print("Successfully created!!")
                 with FileManager(self.init_path).over_write() as init_file:
-                    init_file.write(self.path+'\n')
-                    init_file.write(self.file_name)
-        except Exception:
+                    print(f"\n The data directory is {self._data_dir}, and the parent = {self._parent_dir}")
+                    init_path=str(self._data_dir.relative_to(self._parent_dir))
+                    print(init_path)
+                    init_file.write(init_path)
+                    
+        except FileExistsError:
+            
             index = self.file_name.rfind("_")
+            print(f"index = {index}")
             self.index_real = self.file_name.rfind(".")
-            self.real_file_name = self.file_name[:self.index_real]
+            print(f"index_real = {self.index_real}")
+            self.real_file_name = self._data_dir.stem
+            print(f"real_file_name = {self.real_file_name}")
             if index != -1:
                 # The name will be from tha beging until "." position.
                 self.file_name_w = self.file_name[:index]
+                print(f"real_file_name = {self.real_file_name}")
                 self.len_real_file_name = len(self.real_file_name)
+                print(f"self.len_real_file_name = {self.len_real_file_name}")
                 try:
-                    int(self.file_name[index+1:self.len_real_file_name])
+                    int(self.real_file_name.rsplit("_",1)[1])
+#                     int(self.file_name[index+1:self.len_real_file_name])
                     if not self.first_check:
                         self.first_check = True
                         self.file_name = self.file_name_w+self.extension
