@@ -86,17 +86,25 @@ class Monitor(ttk.Window):
         # If you don't put this, you are not going to be able to make the window
         super().__init__(themename=THEME_NAME)
         
-        # Parent directory is the one that is two levels above
-        self._parent_dir = Path(__file__).parent.parent
-        self._data_dir = self._parent_dir
-        
         # The screen sizes
         self.SCREEN_HEIGHT = self.winfo_screenheight()
         self.SCREEN_WIDTH = self.winfo_screenwidth()
 
         # We create the menu
         self._menubar = Menu(self)
+        
+        self._data_variables = {
+            # The syntax is the following:
+            # key: [name of the variable,[headers],[data]]
+            "T": ["Temperature", [], []],
+            "RH": ["Relative Humidity", [], []],
+            "P": ["Pressure", [], []],
+        }
 
+        # Parent directory is the one that is two levels above
+        self._parent_dir = Path(__file__).parent.parent
+        self._data_dir = self._parent_dir
+        
         # In the first row we have the first part of the path
         # In the second row we have the file's name
         self._init_path = r"init_path.txt"
@@ -107,13 +115,6 @@ class Monitor(ttk.Window):
             # You need to improve the code when there's no table
             self._read_line = file.readline().split('/')
 
-        self._data_variables = {
-            # The syntax is the following:
-            # key: [name of the variable,[headers],[data]]
-            "T": ["Temperature", [], []],
-            "RH": ["Relative Humidity", [], []],
-            "P": ["Pressure", [], []],
-        }
         # Creating the real data directory with the pieces of information
         # given by "init_path.txt"
         for item in self._read_line:

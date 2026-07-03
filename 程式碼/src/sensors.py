@@ -26,7 +26,7 @@ class Dog_Watcher():
         """_summary_
         """
         self.slash = '/'
-        self.init_path = r'/home/raspberrypi2/Desktop/Solar-Dryer-Monitor-And-Controller/init_path.txt'
+        self.init_path = r'init_path.txt'
         self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
@@ -74,6 +74,7 @@ class Dog_Watcher():
         print(f"Header = {self.header}")
         self.create_header()
         print(f"Header = {self.header}")
+    
         with FileManager(self.init_path).read() as init_path_file:
                 self.path = init_path_file.readline()[:-1]
                 self.file_name = init_path_file.readline()
