@@ -17,6 +17,7 @@ import numpy as np
 import csv
 import adafruit_tca9548a
 from adafruit_sht31d import SHT31D
+from pathlib import Path
 
 
 class Dog_Watcher():
@@ -74,7 +75,6 @@ class Dog_Watcher():
         print(f"Header = {self.header}")
         self.create_header()
         print(f"Header = {self.header}")
-    
         with FileManager(self.init_path).read() as init_path_file:
                 self.path = init_path_file.readline()[:-1]
                 self.file_name = init_path_file.readline()
@@ -84,7 +84,7 @@ class Dog_Watcher():
         
         # What would it happen if we have two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
-        with FileManager(self.full_path_file).read() as data_file:
+        with FileManager(str(self._data_dir)).read() as data_file:
             header = data_file.readline()
             header = re.sub('\s+','',header.strip())
             # There's a double check if it is able to write on the document
@@ -202,25 +202,35 @@ class Dog_Watcher():
     def file_detection(self,replica_number):
         # Here you should modify it depending of the directory.
         try:
-            self.set_full_path_file(self.path + self.slash + self.file_name)
+            self.set_full_path_file(self._parent_data_dir.joinpath(self.file_name))
             
             with FileManager(self.full_path_file).detect() as file:
                 file.write(self.header+'\n')
                 print(f"Header = {self.header}")
                 print("Successfully created!!")
                 with FileManager(self.init_path).over_write() as init_file:
-                    init_file.write(self.path+'\n')
-                    init_file.write(self.file_name)
-        except Exception:
+                    print(f"\n The data directory is {self._data_dir}, and the parent = {self._parent_dir}")
+                    init_path=str(self._data_dir.relative_to(self._parent_dir))
+                    print(init_path)
+                    init_file.write(init_path)
+                    
+        except FileExistsError:
+            
             index = self.file_name.rfind("_")
+            print(f"index = {index}")
             self.index_real = self.file_name.rfind(".")
-            self.real_file_name = self.file_name[:self.index_real]
+            print(f"index_real = {self.index_real}")
+            self.real_file_name = self._data_dir.stem
+            print(f"real_file_name = {self.real_file_name}")
             if index != -1:
                 # The name will be from tha beging until "." position.
                 self.file_name_w = self.file_name[:index]
+                print(f"real_file_name = {self.real_file_name}")
                 self.len_real_file_name = len(self.real_file_name)
+                print(f"self.len_real_file_name = {self.len_real_file_name}")
                 try:
-                    int(self.file_name[index+1:self.len_real_file_name])
+                    int(self.real_file_name.rsplit("_",1)[1])
+#                     int(self.file_name[index+1:self.len_real_file_name])
                     if not self.first_check:
                         self.first_check = True
                         self.file_name = self.file_name_w+self.extension
