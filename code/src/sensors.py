@@ -4,6 +4,8 @@ Created on Mon Sep  9 06:40:26 2024
 
 @author: perro
 """
+
+
 import re
 import glob
 import time
@@ -31,7 +33,6 @@ class Dog_Watcher():
         self.extension ='.csv' 
         self.attempt_init = 1
         self.first_check = False
-        
         
 
     def init(self):
@@ -75,14 +76,19 @@ class Dog_Watcher():
         print(f"Header = {self.header}")
         self.create_header()
         print(f"Header = {self.header}")
-        with FileManager(self.init_path).read() as init_path_file:
-                self.path = init_path_file.readline()[:-1]
-                self.file_name = init_path_file.readline()
-                
-                if new == True:
-                    self.file_detection(2) # The two is in case there's already a one file there.
+        self._parent_dir = Path(__file__).parent.parent
+        self._data_dir = self._parent_dir
+        with FileManager(self.init_path).read() as file:
+            self._read_line = file.readline().split('/')
+            for item in self._read_line:
+                self._data_dir = self._data_dir.joinpath(item)
+            print(f" self._data_dir = {self._data_dir}")
+            self.file_name = self._data_dir.stem+self._data_dir.suffix
+            print(f"The file name is {self.file_name}")
+            if new == True:
+                self.file_detection(2) # The two is in case there's already a one file there.
         
-        # What would it happen if we have two files with the same name, but differet headers?
+        # What would it happen if we had two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
         with FileManager(str(self._data_dir)).read() as data_file:
             header = data_file.readline()
@@ -198,13 +204,15 @@ class Dog_Watcher():
 
     def set_full_path_file(self,path):
         self.full_path_file = path
-
+        
+        
     def file_detection(self,replica_number):
         # Here you should modify it depending of the directory.
         try:
-            self.set_full_path_file(self._parent_data_dir.joinpath(self.file_name))
             
-            with FileManager(self.full_path_file).detect() as file:
+            
+            
+            with FileManager(self._data).detect() as file:
                 file.write(self.header+'\n')
                 print(f"Header = {self.header}")
                 print("Successfully created!!")
@@ -216,20 +224,24 @@ class Dog_Watcher():
                     
         except FileExistsError:
             
-            index = self.file_name.rfind("_")
-            print(f"index = {index}")
+            self.index = self.file_name.rfind("_")
+            print(f"index = {self.index}")
             self.index_real = self.file_name.rfind(".")
             print(f"index_real = {self.index_real}")
-            self.real_file_name = self._data_dir.stem
+            self.real_file_name = self.file_name[:self.index_real]
             print(f"real_file_name = {self.real_file_name}")
-            if index != -1:
-                # The name will be from tha beging until "." position.
-                self.file_name_w = self.file_name[:index]
-                print(f"real_file_name = {self.real_file_name}")
+            if self.index != -1:
+#                 self.file_name_w = self.file_name.stem
+                # The name will be from tha begining until "." position.
+                self.file_name_w = self.file_name[:self.index]
+
+                print(f"the file name without extension = {self.file_name_w}")
                 self.len_real_file_name = len(self.real_file_name)
                 print(f"self.len_real_file_name = {self.len_real_file_name}")
                 try:
-                    int(self.real_file_name.rsplit("_",1)[1])
+                    
+                    int(self.file_name[self.index+1:self.len_real_file_name])
+#                     print(f"The split result is {self.file_name_w.rsplit('_',1)[1]}")
 #                     int(self.file_name[index+1:self.len_real_file_name])
                     if not self.first_check:
                         self.first_check = True
@@ -247,6 +259,61 @@ class Dog_Watcher():
             
             replica_number = replica_number +1
             self.file_detection(replica_number)
+
+#     def file_detection(self,replica_number):
+#         # Here you should modify it depending of the directory.
+#         try:
+#            
+#             
+#             self.set_full_path_file(self._data_dir.parent.joinpath(self.file_name))
+#             
+#             with FileManager(self.full_path_file).detect() as file:
+#                 file.write(self.header+'\n')
+#                 print(f"Header = {self.header}")
+#                 print("Successfully created!!")
+#                 with FileManager(self.init_path).over_write() as init_file:
+#                     print(f"\n The data directory is {self._data_dir}, and the parent = {self._parent_dir}")
+#                     init_path=str(self._data_dir.relative_to(self._parent_dir))
+#                     print(init_path)
+#                     init_file.write(init_path)
+#                     
+#         except FileExistsError:
+#             
+#             self.index = self.file_name.rfind("_")
+#             print(f"index = {self.index}")
+#             self.index_real = self.file_name.rfind(".")
+#             print(f"index_real = {self.index_real}")
+#             self.real_file_name = self.file_name[:self.index_real]
+#             print(f"real_file_name = {self.real_file_name}")
+#             if self.index != -1:
+# #                 self.file_name_w = self.file_name.stem
+#                 # The name will be from tha begining until "." position.
+#                 self.file_name_w = self.file_name[:self.index]
+# 
+#                 print(f"the file name without extension = {self.file_name_w}")
+#                 self.len_real_file_name = len(self.real_file_name)
+#                 print(f"self.len_real_file_name = {self.len_real_file_name}")
+#                 try:
+#                     
+#                     int(self.file_name[self.index+1:self.len_real_file_name])
+# #                     print(f"The split result is {self.file_name_w.rsplit('_',1)[1]}")
+# #                     int(self.file_name[index+1:self.len_real_file_name])
+#                     if not self.first_check:
+#                         self.first_check = True
+#                         self.file_name = self.file_name_w+self.extension
+#                         self.file_detection(replica_number)
+#                         return
+#                     
+#                     self.file_name = self.file_name_w+'_'+str(replica_number)+self.extension
+#                 except ValueError:
+#                     # If there's an error means that it is the first copy will be made,
+#                     # Then, we are going to need an underscore.
+#                     self.file_name = self.real_file_name+'_'+str(replica_number)+self.extension
+#             else:
+#                 self.file_name = self.real_file_name+'_'+str(replica_number)+self.extension
+#             
+#             replica_number = replica_number +1
+#             self.file_detection(replica_number)
 
     def create_header(self):
         # At least there will be one sensor for that reason, the '0'
