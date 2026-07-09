@@ -25,21 +25,22 @@ from pathlib import Path
 class Dog_Watcher():
     """
     It watches constantly the data sent by the sensors, and it is stored peridiocally
+    
     """
     def __init__(self):
-#        These can be any type of sensors.
-        self.connected_sensors = ['BME280','SHT31','MLX90614']
+        # These can be any type of sensors.
+        self._connected_sensors = ['BME280','SHT31','MLX90614']
         # You need to change your initial path
-        
-        self.slash = '/'
-        self.init_path = r'init_path.txt'
-        self.extension ='.csv' 
-        self.attempt_init = 1
-        self.first_check = False
-        
+        self._init_path = r'init_path.txt'
+        # It is used for scanning many times a channel to see if 
+        # there are any sensors connected.
+        self._attempt_init = 1
 
     def init(self):
-        # We can have one greeting every time is initialize the program.
+        """
+        It shows the initial message.
+        """
+        # We can have one greeting every time the program is initialized.
         messages = ["Solar Dryer Software Recorder", 
         "Now you are going to be able to record your data from your system",
         "Welcome!!!"]
@@ -51,9 +52,14 @@ class Dog_Watcher():
             print(" "*len(message),end='\r')
     
     def setup(self):
-        # Cleaning self.sensors_name
-        self.scanner()
-        if self.attempt_init == 5:
+        """All sensors are detected by each channel  of the multiplexor
+        and whether apparently we don't see any of them we are going to 
+        try 4 times more"""
+        # Scanning the channels.
+        self._scanner()
+
+        # Until the 5th try everything collapses, and the program is shut down
+        if self._attempt_init == 5:
             print("Sorry, we have tried 5 times, and there are no sensors")
             time.sleep(1)
             print("We are going to shut down the program")
@@ -61,9 +67,12 @@ class Dog_Watcher():
             print("Good bye...")
             time.sleep(1)
             raise KeyboardInterrupt
-        if len(self.connected_sensors) == 0:
-            self.connected_sensors = ['BME280','SHT31','MLX90614']
-            self.attempt_init += self.attempt_init
+        
+        # We need to check how many types of sensors are connected,
+        # if none, we must try it again 
+        if len(self._connected_sensors) == 0:
+            self._connected_sensors = ['BME280','SHT31','MLX90614']
+            self._attempt_init += self._attempt_init
             print("There are no sensors connected")
             time.sleep(1)
             print("We are going to try it again in 5 seconds")
@@ -71,38 +80,35 @@ class Dog_Watcher():
             self.setup()
             return  # To finish before going next, just the original has to continue.
         
-        new = True
         self.display_trigger = 10    # 5 seconds
         self.average_trigger = 0*60+ 2*5  # 5 min
-        self.minimum_sample = int((self.average_trigger/self.display_trigger + 1)*0.8) # To have at least 80% of the data.
+        self.minimum_sample = np.ceil((self.average_trigger/self.display_trigger + 1)*0.8) # To have at least 80% of the data.
         self.header = "Day,Month,Year,Time"
         print(f"Header = {self.header}")
         self.create_header()
         print(f"Header = {self.header}")
         self._parent_dir = Path(__file__).parents[1]
         self._data_dir = self._parent_dir
-        with FileManager(self.init_path).read() as file:
+        with FileManager(self._init_path).read() as file:
             self._read_line = file.readline().split('/')
             for item in self._read_line: 
                 self._data_dir = self._data_dir.joinpath(item)
             print(f" self._data_dir = {self._data_dir}")
             self.file_name = self._data_dir.stem+self._data_dir.suffix
             print(f"The file name is {self.file_name}")
-            if new == True:
-                self.file_detection(1) # The two is in case there's already a one file there.
+            self.file_detection(1) # The two is in case there's already a one file there.
         
         # What would it happen if we had two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
         with FileManager(str(self._data_dir)).read() as data_file:
             header = data_file.readline()
-            print(header)
             header = re.sub('\s+','',header.strip())
             # There's a double check if it is able to write on the document
             # The headers should be the same.
             if self.header != header:
                 self.file_detection(1)
 
-    def scanner(self):
+    def _scanner(self):
         print("Sensors Scanner", end='')
         for i in range(3):
             print(".",end='')
@@ -132,8 +138,8 @@ class Dog_Watcher():
             added_BME280 = [False, False] # We have two addressess for this sensor.
             added_SHT31 = [False, False] # We have two addresses for this sensor
             added_MLX = False
-            attempts = 3
-            for attempt in range(attempts):
+            
+            for _ in range(3):
                 try:
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
@@ -187,14 +193,14 @@ class Dog_Watcher():
         self.control_center[virtual_sensor.type].append(virtual_sensor)
 
     def remove_sensors(self):
-        inter_var = self.connected_sensors.copy()
+        inter_var = self._connected_sensors.copy()
         
         for type in inter_var:
             if self.control_center[type+'_number'] > 0:
                 print(f"{self.control_center[type+'_number']} " + type + ' connected')
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array there are ones in deed.
-                del self.connected_sensors[self.connected_sensors.index(type)]
+                del self._connected_sensors[self._connected_sensors.index(type)]
             
             time.sleep(0.1)
             
@@ -227,7 +233,7 @@ class Dog_Watcher():
                     file.write(self.header+'\n')
                     print(f"Header = {self.header}")
                     print("Successfully created!!")
-                    with FileManager(self.init_path).over_write() as init_file:
+                    with FileManager(self._init_path).over_write() as init_file:
                         print(f"\n The data directory is {self._data_dir}, and the parent = {self._parent_dir}")
                         init_path=str(self._data_dir.relative_to(self._parent_dir))
                         print(init_path)
@@ -243,7 +249,7 @@ class Dog_Watcher():
          # All the sensors listed under, they EXIST.
         header = ''
         
-        for type in self.connected_sensors:
+        for type in self._connected_sensors:
             
             
             for virtual_sensor in self.control_center[type]:
@@ -255,7 +261,7 @@ class Dog_Watcher():
 
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self.connected_sensors:
+        for connected_sensor in self._connected_sensors:
             properties = self.control_center[connected_sensor][0].get_properties()
             for property in properties:
                 values = []
@@ -277,7 +283,7 @@ class Dog_Watcher():
 
     def data_operation(self):
         # Maybe here we can add a clock to see the differences between sensors' time.
-        for type in self.connected_sensors:
+        for type in self._connected_sensors:
             for virtual_sensor in self.control_center[type]:
                 try:
                     self.avg_exception = False
@@ -304,7 +310,7 @@ class Dog_Watcher():
             virtual_sensor.avg_prop[property].append(value)
 
     def set_avg_prop(self):
-        for type in self.connected_sensors:
+        for type in self._connected_sensors:
             for virtual_sensor in self.control_center[type]:
                 properties = virtual_sensor.get_properties()
                 prop = properties[0]
@@ -369,7 +375,7 @@ class Dog_Watcher():
     def join_fun(self):
         self.results_avg = []
         i=0
-        for connected_sensor in self.connected_sensors:
+        for connected_sensor in self._connected_sensors:
             for virtual_sensor in self.control_center[connected_sensor]:
                 for value in virtual_sensor.avg_prop.values():
                     # The array has just one value
