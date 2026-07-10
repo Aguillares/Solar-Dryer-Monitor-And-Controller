@@ -80,9 +80,9 @@ class Dog_Watcher():
             self.setup()
             return  # To finish before going next, just the original has to continue.
         
-        self.display_trigger = 10    # 5 seconds
-        self.average_trigger = 0*60+ 2*5  # 5 min
-        self.minimum_sample = np.ceil((self.average_trigger/self.display_trigger + 1)*0.8) # To have at least 80% of the data.
+        self.display_trigger = 5*1    # 5 seconds
+        self.average_trigger = 0*60+ 3*5  # 5 min
+        self.minimum_sample = np.ceil((self.average_trigger/self.display_trigger)*0.8) # To have at least 80% of the data.
         self.header = "Day,Month,Year,Time"
         print(f"Header = {self.header}")
         self.create_header()
@@ -103,6 +103,7 @@ class Dog_Watcher():
         with FileManager(str(self._data_dir)).read() as data_file:
             header = data_file.readline()
             header = re.sub('\s+','',header.strip())
+            
             # There's a double check if it is able to write on the document
             # The headers should be the same.
             if self.header != header:
@@ -121,16 +122,11 @@ class Dog_Watcher():
         self.tca = adafruit_tca9548a.TCA9548A(self.i2c)
         # We initialize the dictionary "contro_center" to save all data related to them.
         self.control_center = {
-            "BME280_number" : 0,
-            "MLX90614_number" : 0,
-            "SHT31_number" : 0,
             "BME280" : [],
             "MLX90614" : [],
             "SHT31" : [],
         }
-        number_BME280 = 1
-        number_SHT31= 1
-        number_MLX= 1
+        
         # We have 8 channels or ports.
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
@@ -151,34 +147,48 @@ class Dog_Watcher():
                     try:
                         # We have different addresses according to the sensor.
                         for address in addresses:
+                            
                             if hex(address) != hex(0x70):
                                 if hex(address) == hex(0x76) and not added_BME280[0]:
                                     added_BME280[0] = True
-                                    virtual_sensor = BME280(self.tca,channel,address,number_BME280)
-                                    number_BME280 = number_BME280+1
+                                    virtual_sensor = BME280(self.tca,
+                                                            channel,
+                                                            address,
+                                                            len(self.control_center["BME280"]))
+                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
                                     
                                 elif hex(address) == hex(0x77) and not added_BME280[1]:
                                     added_BME280[1] = True
-                                    virtual_sensor = BME280(self.tca,channel,address,number_BME280)
-                                    number_BME280 += number_BME280+1
+                                    virtual_sensor = BME280(self.tca,
+                                                            channel,
+                                                            address,
+                                                            len(self.control_center["BME280"]))
+                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
 
                                 elif hex(address) == hex(0x44) and not added_SHT31[0]:
                                     added_SHT31[0] = True
-                                    virtual_sensor = SHT31(self.tca,channel,address,number_SHT31)
-                                    number_SHT31 = number_SHT31+1
+                                    virtual_sensor = SHT31(self.tca,
+                                                           channel,
+                                                           address,
+                                                           len(self.control_center["SHT31"]))
+                                    self.control_center[virtual_sensor.type].append(virtual_sensor) 
 
                                 elif hex(address) == hex(0x45) and not added_SHT31[1]:
                                     added_SHT31[1] = True
-                                    virtual_sensor = SHT31(self.tca,channel,address,number_SHT31)
-                                    number_SHT31 = number_SHT31+1
+                                    virtual_sensor = SHT31(self.tca,
+                                                           channel,
+                                                           address,
+                                                           len(self.control_center["SHT31"]))
+                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
 
                                 elif hex(address) == hex(0x5A) and not added_MLX:
                                     added_MLX = True
-                                    virtual_sensor = MLX(self.tca,channel,address,number_MLX)
-                                    number_MLX = number_MLX+1
+                                    virtual_sensor = MLX(self.tca,
+                                                         channel,
+                                                         address,
+                                                         len(self.control_center["MLX90614"]))
+                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
                                     
-                                self.add_sensors(virtual_sensor)
-
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
                 except OSError as e:
@@ -189,15 +199,15 @@ class Dog_Watcher():
         self.remove_sensors()
     
     def add_sensors(self,virtual_sensor):
-        self.control_center[virtual_sensor.type+"_number"] += 1
         self.control_center[virtual_sensor.type].append(virtual_sensor)
 
     def remove_sensors(self):
         inter_var = self._connected_sensors.copy()
         
         for type in inter_var:
-            if self.control_center[type+'_number'] > 0:
-                print(f"{self.control_center[type+'_number']} " + type + ' connected')
+            num = len(self.control_center[type])
+            if num > 0:
+                print(f"{num} " + type + ' connected')
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array there are ones in deed.
                 del self._connected_sensors[self._connected_sensors.index(type)]
