@@ -82,31 +82,35 @@ class Dog_Watcher():
         
         self.display_trigger = 5*1    # 5 seconds
         self.average_trigger = 0*60+ 3*5  # 5 min
-        self.minimum_sample = np.ceil((self.average_trigger/self.display_trigger)*0.8) # To have at least 80% of the data.
-        self.header = "Day,Month,Year,Time"
-        print(f"Header = {self.header}")
-        self.create_header()
-        print(f"Header = {self.header}")
+        # The minimum amount of samples is 80% of what we triggered
+        self._minimum_sample = np.ceil((self.average_trigger/self.display_trigger)*0.8) # To have at least 80% of the data.
+        # We start with this header and we develop it with _create_header method
+        self._header = "Day,Month,Year,Time"
+        self._create_header()
+        # We go two levels above
         self._parent_dir = Path(__file__).parents[1]
+        # _data_dir is for where the database is saved
         self._data_dir = self._parent_dir
+
+        # The relative path to the database is in 'file'
         with FileManager(self._init_path).read() as file:
             self._read_line = file.readline().split('/')
+            # And we can make the new pathlib object
             for item in self._read_line: 
                 self._data_dir = self._data_dir.joinpath(item)
-            print(f" self._data_dir = {self._data_dir}")
+            
             self.file_name = self._data_dir.stem+self._data_dir.suffix
-            print(f"The file name is {self.file_name}")
             self.file_detection(1) # The two is in case there's already a one file there.
         
         # What would it happen if we had two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
         with FileManager(str(self._data_dir)).read() as data_file:
             header = data_file.readline()
-            header = re.sub('\s+','',header.strip())
+            header = re.sub(r"\s+",'',header.strip())
             
             # There's a double check if it is able to write on the document
             # The headers should be the same.
-            if self.header != header:
+            if self._header != header:
                 self.file_detection(1)
 
     def _scanner(self):
@@ -219,54 +223,69 @@ class Dog_Watcher():
         self.full_path_file = path
         
         
-    def file_detection(self,replica_number):
+    def _file_detection(self,replica_number):
         # Here you should modify it depending of the directory.
+        # The furtherest right side should be a number.
         file_name_arr = self._data_dir.stem.rsplit('_',1)
         
         try:
+            # Test to know whether it is a number, if it isn't, it will throw ValueError out
             num=int(file_name_arr[-1])
             if replica_number == 1:
+                # As there's already a replica, we select the base name
                 new_name = file_name_arr[0]
             else:
                 new_name = file_name_arr[0] +'_'+str(replica_number)
         except ValueError:
+            # If just this line is run, it means the original name was 'sensor_data' or whatever other name
+            # it could hold that doesn't have the print of replica (the number attached at the end).
+            # otherwise the other line is also run.
             new_name = self._data_dir.stem
+            
+            # If we started with a replica, remember we are going to use always the base name
+            # to start with, it means that althought the name is 'sensor_data_5', we will check 
+            # the base name first, which is 'sensor_data', 'replica_number' with 2 means we have
+            # called '_file_detection' twice.
             if replica_number == 2:
                 new_name = new_name +'_'+str(replica_number)
                 
         finally:
             
             try:
+                # The first try will be always the base name, in this case nothing is changed, but 
+                # for the second, third and so on, the name is replaced by the replica's names 1, 2, 3,...
                 self._data_dir=self._data_dir.with_stem(new_name)
-                print(f"The data_dir = {self._data_dir} \n")
+
+                # We need to determine if this file exists
                 with FileManager(self._data_dir).detect() as file:
-                    file.write(self.header+'\n')
-                    print(f"Header = {self.header}")
+                    file.write(self._header+'\n')
+                    print(f"Header = {self._header}")
                     print("Successfully created!!")
                     with FileManager(self._init_path).over_write() as init_file:
                         print(f"\n The data directory is {self._data_dir}, and the parent = {self._parent_dir}")
+                        # We want to save the relative path
                         init_path=str(self._data_dir.relative_to(self._parent_dir))
                         print(init_path)
                         init_file.write(init_path)
                     
             except FileExistsError:
                 print(self._data_dir)
-                self.file_detection(replica_number+1)
+                self._file_detection(replica_number+1)
         
             
-    def create_header(self):
+    def _create_header(self):
+        
         # At least there will be one sensor for that reason, the '0'
-         # All the sensors listed under, they EXIST.
+        # All the sensors listed under, they EXIST.
         header = ''
+        # All connected sensors are considered to make the header.
         
         for type in self._connected_sensors:
-            
-            
             for virtual_sensor in self.control_center[type]:
                 for property in virtual_sensor.get_properties():
                     header = header+',' + virtual_sensor.get_name()+'_'+property
                     
-        self.header = self.header+header 
+        self._header = self._header+header 
         
 
     def print_values(self,data_type):
@@ -325,7 +344,7 @@ class Dog_Watcher():
                 properties = virtual_sensor.get_properties()
                 prop = properties[0]
                 # If one average value doesn't work, none of the others work. They are not useful.
-                normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self.minimum_sample
+                normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self._minimum_sample
                 # We need to check for each 
                 for property in properties:
                     # To save the last sensors reading.
@@ -563,7 +582,6 @@ class FileManager(object):
     def __init__(self, file_whole_path):
         self.file_whole_path = file_whole_path
         
-
     def append(self):
         self.file = open(self.file_whole_path, 'a')
         return self.file
