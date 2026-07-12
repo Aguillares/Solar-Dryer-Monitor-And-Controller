@@ -257,7 +257,7 @@ class Dog_Watcher():
                 self._data_dir=self._data_dir.with_stem(new_name)
 
                 # We need to determine if this file exists
-                with FileManager(self._data_dir).detect() as file:
+                with DetectFile(self._data_dir) as file:
                     file.write(self._header+'\n')
                     print(f"Header = {self._header}")
                     print("Successfully created!!")
@@ -579,18 +579,31 @@ class MLX(Sensor):
         return obj_T
 
 class ReadFile():
-    def __init__(self,path:str):
-        self._path = path
+    """It opens the file in reading and editing mode"""
+    def __init__(self,file_path:str):
+        self._file_path = file_path
 
     def __enter__(self):
          # The relative path to the database is in 'file'
-        self._read_line = open(self._path,'r+')
-        return self._read_line
+        self._file = open(self._file_path,'r+')
+        return self._file
 
     def __exit__(self,*_):
-        if self._read_line:
-            self._read_line.close()
+        if self._file:
+            self._file.close()
 
+class DetectFile():
+    """It helps to detect whether the file exists"""
+    def __init__(self,file_path:str|Path ):
+        self._file_path = file_path
+    
+    def __enter__(self):
+        self.file = open(self._file_path,"x")
+        return self.file
+
+    def __exit__(self, *_):
+        if self.file:
+            self.file.close()
 
 class FileManager(object):
     def __init__(self, file_whole_path):
