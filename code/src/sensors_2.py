@@ -97,13 +97,6 @@ class Dog_Watcher():
             for item in read_line:
                 self._data_dir = self._data_dir.joinpath(item)
         self._file_detection(1) # The two is in case there's already a one file there.
-        # # The relative path to the database is in 'file'
-        # with FileManager(self._init_path).read() as file:
-        #     self._read_line = file.readline().split('/')
-        #     # And we can make the new pathlib object
-        #     for item in self._read_line: 
-        #         self._data_dir = self._data_dir.joinpath(item)
-
         
         
         # -TODO- Improve, imagine we want to open an existing file and want to add more information to it
@@ -111,14 +104,14 @@ class Dog_Watcher():
         #  
         # What would it happen if we had two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
-        with FileManager(str(self._data_dir)).read() as data_file:
+        with ReadFile(str(self._data_dir)) as data_file:
             header = data_file.readline()
             header = re.sub(r"\s+",'',header.strip())
             
-            # There's a double check if it is able to write on the document
-            # The headers should be the same.
-            if self._header != header:
-                self._file_detection(1)
+        # There's a double check if it is able to write on the document
+        # The headers should be the same.
+        if self._header != header:
+            self._file_detection(1)
 
     def _scanner(self):
         print("Sensors Scanner", end='')
