@@ -92,16 +92,23 @@ class Dog_Watcher():
         # _data_dir is for where the database is saved
         self._data_dir = self._parent_dir
 
-        # The relative path to the database is in 'file'
-        with FileManager(self._init_path).read() as file:
-            self._read_line = file.readline().split('/')
+        with ReadFile(self._init_path) as read_line:
             # And we can make the new pathlib object
-            for item in self._read_line: 
+            for item in read_line:
                 self._data_dir = self._data_dir.joinpath(item)
-            
-            self.file_name = self._data_dir.stem+self._data_dir.suffix
-            self.file_detection(1) # The two is in case there's already a one file there.
+        self._file_detection(1) # The two is in case there's already a one file there.
+        # # The relative path to the database is in 'file'
+        # with FileManager(self._init_path).read() as file:
+        #     self._read_line = file.readline().split('/')
+        #     # And we can make the new pathlib object
+        #     for item in self._read_line: 
+        #         self._data_dir = self._data_dir.joinpath(item)
+
         
+        
+        # -TODO- Improve, imagine we want to open an existing file and want to add more information to it
+        # we need to determine that the sensors connected are the same, to this file header.
+        #  
         # What would it happen if we had two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
         with FileManager(str(self._data_dir)).read() as data_file:
@@ -111,7 +118,7 @@ class Dog_Watcher():
             # There's a double check if it is able to write on the document
             # The headers should be the same.
             if self._header != header:
-                self.file_detection(1)
+                self._file_detection(1)
 
     def _scanner(self):
         print("Sensors Scanner", end='')
@@ -577,6 +584,20 @@ class MLX(Sensor):
         else:
             obj_T = value
         return obj_T
+
+class ReadFile():
+    def __init__(self,path:str):
+        self._path = path
+
+    def __enter__(self):
+         # The relative path to the database is in 'file'
+        self._read_line = open(self._path,'r+')
+        return self._read_line
+
+    def __exit__(self,*_):
+        if self._read_line:
+            self._read_line.close()
+
 
 class FileManager(object):
     def __init__(self, file_whole_path):
