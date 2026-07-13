@@ -230,7 +230,7 @@ class Dog_Watcher():
         
         try:
             # Test to know whether it is a number, if it isn't, it will throw ValueError out
-            num=int(file_name_arr[-1])
+            int(file_name_arr[-1])
             if replica_number == 1:
                 # As there's already a replica, we select the base name
                 new_name = file_name_arr[0]
@@ -257,16 +257,14 @@ class Dog_Watcher():
                 self._data_dir=self._data_dir.with_stem(new_name)
 
                 # We need to determine if this file exists
-                with DetectFile(self._data_dir) as file:
-                    file.write(self._header+'\n')
+                with DetectFile(self._data_dir) as file_header, OverWriteFile(self._init_path) as init_file:
+                    file_header.write(self._header+'\n')
                     print(f"Header = {self._header}")
                     print("Successfully created!!")
-                    with FileManager(self._init_path).over_write() as init_file:
-                        print(f"\n The data directory is {self._data_dir}, and the parent = {self._parent_dir}")
-                        # We want to save the relative path
-                        init_path=str(self._data_dir.relative_to(self._parent_dir))
-                        print(init_path)
-                        init_file.write(init_path)
+                    # We want to save the relative path
+                    init_path=str(self._data_dir.relative_to(self._parent_dir))
+                    print(f"The new {init_path = }")
+                    init_file.write(init_path)
                     
             except FileExistsError:
                 print(self._data_dir)
@@ -598,12 +596,24 @@ class DetectFile():
         self._file_path = file_path
     
     def __enter__(self):
-        self.file = open(self._file_path,"x")
-        return self.file
+        self._file = open(self._file_path,"x")
+        return self._file
 
     def __exit__(self, *_):
-        if self.file:
-            self.file.close()
+        if self._file:
+            self._file.close()
+
+class OverWriteFile():
+    def __init__(self,file_path:str|Path):
+        self._file_path = file_path
+    
+    def __enter__(self):
+        self._file = open(self._file_path,'w+')
+        return self._file
+    
+    def __exit__(self,*_):
+        if self._file:
+            self._file.close()
 
 class FileManager(object):
     def __init__(self, file_whole_path):
