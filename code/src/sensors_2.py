@@ -114,12 +114,14 @@ class Dog_Watcher():
             self._file_detection(1)
 
     def _scanner(self):
+        """It detects all sensors in the multiplexor, transversing each channel
+        """
         print("Sensors Scanner", end='')
         for i in range(3):
             print(".",end='')
             time.sleep(0.25)
         print("\n")
-        time.sleep(0.4)
+        time.sleep(0.8)
         # I2C setup on bus 1
         self.i2c = board.I2C()
         # We are going to use TCA9548A, which is multiplexer
@@ -149,7 +151,6 @@ class Dog_Watcher():
                     self.tca[channel].unlock()
                     
                     try:
-                        raise Exception
                         # We have different addresses according to the sensor.
                         for address in addresses:
                             
@@ -196,6 +197,7 @@ class Dog_Watcher():
                                     
                     except Exception as e:
                         print(f"Error in Port: {channel+1} : {e}")
+                        time.sleep(1)
                 except OSError as e:
                     print(f"Aborting, there are torn wires or desconected, (check power wires) ")
                     time.sleep(2)
@@ -214,14 +216,10 @@ class Dog_Watcher():
             if num > 0:
                 print(f"{num} " + type + ' connected')
             else:
-                # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array there are ones in deed.
+                # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array, they are ones in deed.
                 del self._connected_sensors[self._connected_sensors.index(type)]
             
-            time.sleep(0.1)
-            
-
-    def set_full_path_file(self,path):
-        self.full_path_file = path
+            time.sleep(1)
         
         
     def _file_detection(self,replica_number):
@@ -264,7 +262,7 @@ class Dog_Watcher():
                     print("Successfully created!!")
                     # We want to save the relative path
                     init_path=str(self._data_dir.relative_to(self._parent_dir))
-                    print(f"The new {init_path = }")
+                    print(f"\nThe new {init_path = }")
                     init_file.write(init_path)
                     
             except FileExistsError:
@@ -273,6 +271,8 @@ class Dog_Watcher():
         
             
     def _create_header(self):
+        """The header is created using its properties
+        as base for making it"""
         
         # At least there will be one sensor for that reason, the '0'
         # All the sensors listed under, they EXIST.
@@ -322,8 +322,8 @@ class Dog_Watcher():
                     self.avg_exception = True
                     print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
                     self.add_avg_data(virtual_sensor)
-                finally:
                     continue
+                    
      
     def add_avg_data(self, virtual_sensor):
         # This "i" is just for the detection of the properties' name
@@ -457,6 +457,7 @@ class Sensor():
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
             #We are going to round it to round it to two places
+            print(f"{set_fun.__name__ = }")
             self.all_properties_values.append(float(round(set_fun(),2)))
             
             
@@ -464,7 +465,7 @@ class Sensor():
             if self.attempts_trigger == 10:
                 self.set_all(np.nan)
                 raise Exception
-                return
+                
             self.attempts_trigger = self.attempts_trigger+1
             self.trigger()
                   
