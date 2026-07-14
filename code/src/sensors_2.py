@@ -355,7 +355,7 @@ class Dog_Watcher():
                         
             
     def save_data(self):
-        with FileManager(str(self._data_dir)).append() as xfile:
+        with open(self._data_dir,'a') as xfile:
             # We have here the start point.
             self.trigger_number = 0
             self.average_number = 0
@@ -576,68 +576,49 @@ class MLX(Sensor):
             obj_T = value
         return obj_T
 
-class ReadFile():
-    """It opens the file in reading and editing mode"""
-    def __init__(self,file_path:str):
+
+class __FileManager(object):
+    
+    _mode = ''
+    def __init__(self,file_path:str|Path):
         self._file_path = file_path
 
     def __enter__(self):
          # The relative path to the database is in 'file'
-        self._file = open(self._file_path,'r+')
+        self._file = open(self._file_path,self._mode)
         return self._file
-
-    def __exit__(self,*_):
+    
+    def __exit__(self, exc_type,exc_value, exc_tb):
         if self._file:
             self._file.close()
 
-class DetectFile():
-    """It helps to detect whether the file exists"""
-    def __init__(self,file_path:str|Path ):
-        self._file_path = file_path
-    
-    def __enter__(self):
-        self._file = open(self._file_path,"x")
-        return self._file
+        if isinstance(exc_type,Exception): 
+            print(f" {exc_type = }")
+            print(f" {exc_value = }")
+            print(f" {exc_tb = }")
 
-    def __exit__(self, *_):
+
+class ReadFile(__FileManager):
+    """It opens the file in reading and editing mode"""
+    _mode = 'r+'
+
+class DetectFile(__FileManager):
+    """It helps to detect whether the file exists or not"""
+    _mode = 'x'
+    def __exit__(self, exc_type,exc_value, exc_tb):
         if self._file:
             self._file.close()
 
-class OverWriteFile():
-    def __init__(self,file_path:str|Path):
-        self._file_path = file_path
+        if isinstance(exc_type,Exception) and not isinstance(exc_type,FileExistsError): 
+            print(f" {exc_type = }")
+            print(f" {exc_value = }")
+            print(f" {exc_tb = }")
     
-    def __enter__(self):
-        self._file = open(self._file_path,'w+')
-        return self._file
-    
-    def __exit__(self,*_):
-        if self._file:
-            self._file.close()
+class OverWriteFile(__FileManager):
+    _mode = 'w+'
 
-class FileManager(object):
-    def __init__(self, file_whole_path):
-        self.file_whole_path = file_whole_path
-        
-    def append(self):
-        self.file = open(self.file_whole_path, 'a')
-        return self.file
-    
-    def read(self):
-        self.file = open(self.file_whole_path,'r+')
-        return self.file
-
-    def over_write(self):
-        self.file = open(self.file_whole_path,'w+')
-        return self.file
-
-    def detect(self):
-        self.file = open(self.file_whole_path,'x')
-        return self.file
-
-    def __exit__(self, *args):
-        self.file.close()
-
+class AddInfo(__FileManager):
+    _mode = 'a'
 
 if __name__ == "__main__":
     try:
