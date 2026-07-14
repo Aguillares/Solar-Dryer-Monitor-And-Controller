@@ -149,6 +149,7 @@ class Dog_Watcher():
                     self.tca[channel].unlock()
                     
                     try:
+                        raise Exception
                         # We have different addresses according to the sensor.
                         for address in addresses:
                             
