@@ -457,7 +457,7 @@ class Sensor():
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
             #We are going to round it to round it to two places
-            print(f"{set_fun.__name__ = }")
+            print(f"{self.__class__.__name__}, {set_fun.__name__ = }")
             self.all_properties_values.append(float(round(set_fun(),2)))
             
             
