@@ -146,7 +146,6 @@ class Dog_Watcher():
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
                    
-                    print(f"The type is {type(addresses)}")
                     #After it is scanned we are going to unlock it again, to let communation flow later
                     self.tca[channel].unlock()
                     
@@ -456,10 +455,12 @@ class Sensor():
     def trigger(self):
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
+            try:
             #We are going to round it to round it to two places
-            print(f"{self.__class__.__name__}, {set_fun.__name__ = }")
-            self.all_properties_values.append(float(round(set_fun(),2)))
-            
+                print(f"{self.__class__.__name__}, {set_fun.__name__ = }")
+                self.all_properties_values.append(float(round(set_fun(),2)))
+            except RuntimeError as e:
+                print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
             
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
