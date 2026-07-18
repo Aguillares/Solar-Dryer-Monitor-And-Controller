@@ -10,7 +10,7 @@ import re
 import glob
 import time
 import board
-from adafruit_mlx90614 import MLX90614
+from adafruit_mlx90614 import MLX90614 as mlx90614
 from adafruit_bme280 import basic as adafruit_bme280
 import sys
 import RPi.GPIO as GPIO
@@ -18,8 +18,9 @@ from hx711 import HX711
 import numpy as np
 import csv
 import adafruit_tca9548a
-from adafruit_sht31d import SHT31D
+from adafruit_sht31d import SHT31D as sht31d
 from pathlib import Path
+from settings import NAME
 
 
 class Dog_Watcher():
@@ -188,14 +189,14 @@ class Dog_Watcher():
 
                                 elif hex(address) == hex(0x5A) and not added_MLX:
                                     added_MLX = True
-                                    virtual_sensor = MLX(self.tca,
+                                    virtual_sensor = MLX90614(self.tca,
                                                          channel,
                                                          address,
                                                          len(self.control_center["MLX90614"]))
                                     self.control_center[virtual_sensor.type].append(virtual_sensor)
                                     
-                    except Exception as e:
-                        print(f"Error in Port: {channel+1} : {e}")
+                    except ValueError:
+                        print(f"Error in Port: {channel}, sensor : {NAME[address]}, address : {address}")
                         time.sleep(1)
                 except OSError as e:
                     print(f"Aborting, there are torn wires or desconected, (check power wires) ")
@@ -525,7 +526,7 @@ class BME280(Sensor):
 
 class SHT31(Sensor):
     def __init__(self,tca,channel,address,number):
-        super().__init__(SHT31D(tca[channel],address),'SHT31',channel,number)
+        super().__init__(sht31d(tca[channel],address),'SHT31',channel,number)
         self.avg_prop = {
             'T' : [],
             'RH' : [],
@@ -552,9 +553,9 @@ class SHT31(Sensor):
             humidity = value
         return humidity
 
-class MLX(Sensor):
+class MLX90614(Sensor):
     def __init__(self,tca,channel,address,number):
-        super().__init__(MLX90614(tca[channel],address),'MLX90614',channel,number)
+        super().__init__(mlx90614(tca[channel],address),'MLX90614',channel,number)
         self.avg_prop = {
             'amb_T' : [],
             'obj_T' : [],

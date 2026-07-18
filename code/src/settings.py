@@ -9,6 +9,14 @@ SHORT_MIN_RANGE = [str(x) for x in range(6)]
 FULL_MIN_RANGE = [str(x) for x in range(60)]
 SEC_RANGE = [str(x) for x in range(60)]
 
+# Addresses
+NAME = {
+    0x44 : "SHT31",
+    0x45 : "SHT31",
+    0x5A : "MLX90614",
+    0x76 : "BME280",
+    0x77 : "BME280"
+}
 
 # -> COLORS <-
 COLOR_VAR_METERS = {
