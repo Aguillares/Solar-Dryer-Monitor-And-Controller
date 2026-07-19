@@ -21,6 +21,7 @@ import adafruit_tca9548a
 from adafruit_sht31d import SHT31D as sht31d
 from pathlib import Path
 from settings import NAME
+import os
 
 
 class Dog_Watcher():
@@ -307,7 +308,8 @@ class Dog_Watcher():
     def cleanAndExit(self):
         print("Cleaning...")
         print("Bye!")
-        sys.exit()
+        os._exit(1)
+#         sys.exit()
 
     def data_operation(self):
         # Maybe here we can add a clock to see the differences between sensors' time.
