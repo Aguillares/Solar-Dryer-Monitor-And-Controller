@@ -216,7 +216,7 @@ class Dog_Watcher():
         for type in inter_var:
             num = len(self.control_center[type])
             if num > 0:
-                print(f"{num} " + type + ' connected. Addresses: ')
+                print(f"{num} " + type + ' connected. Addresses: ', end='')
                 for num,sensor in enumerate(self.control_center[type]):
                     print(sensor.address,end='')
                     if num < len(self.control_center[type]):
@@ -516,7 +516,7 @@ class BME280SHT31(Sensor):
             
             
     def set_RH(self,*value):
-        
+
         if len(value) == 0:
             humidity = self.get_real_sensor().relative_humidity
         else:
