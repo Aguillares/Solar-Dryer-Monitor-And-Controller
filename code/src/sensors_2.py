@@ -120,7 +120,7 @@ class Dog_Watcher():
         """It detects all sensors in the multiplexor, transversing each channel
         """
         print("Sensors Scanner", end='')
-        for i in range(3):
+        for _ in range(3):
             print(".",end='')
             time.sleep(0.25)
         print("\n")
@@ -129,19 +129,25 @@ class Dog_Watcher():
         self.i2c = board.I2C()
         # We are going to use TCA9548A, which is multiplexer
         self.tca = adafruit_tca9548a.TCA9548A(self.i2c)
-        # We initialize the dictionary "contro_center" to save all data related to them.
+        # We initialize the dictionary "control_center" to save all data related to them.
+
         self.control_center = {
-            "BME280" : [],
-            "MLX90614" : [],
-            "SHT31" : [],
+            "BME280" : [[],[]],
+            "MLX90614" : [[],[]],
+            "SHT31" : [[],[]],
         }
-        
+
+        sensors_type = {
+            "BME280" : BME280,
+            "SHT31" : SHT31,
+            "MLX90614" : MLX90614
+        }
         # We have 8 channels or ports.
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
              # After it is added one sensor, no more are accepted with the same address, because we are going to save the same sensor again.
             added_BME280 = [False, False] # We have two addressess for this sensor.
-            added_SHT31 = [False, False] # We have two addresses for this sensor
+            added_SHT31 = [False, False] # We have two addresses for this sensor.
             added_MLX = False
             
             for _ in range(3):
@@ -155,47 +161,55 @@ class Dog_Watcher():
                     try:
                         # We have different addresses according to the sensor.
                         for address in addresses:
-                            
-                            if hex(address) != hex(0x70):
-                                if hex(address) == hex(0x76) and not added_BME280[0]:
-                                    added_BME280[0] = True
-                                    virtual_sensor = BME280(self.tca,
-                                                            channel,
-                                                            address,
-                                                            len(self.control_center["BME280"]))
-                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
+                            sensor_name = NAME[address]
+                            if not address in self.control_center[sensor_name][1]:
+
+                                self.control_center[sensor_name][0].append(sensors_type[sensor_name](self.tca,
+                                                                channel,
+                                                                address,
+                                                                len(self.control_center[sensor_name])))
+                                self.control_center[sensor_name][1].append(address)
+                            # if hex(address) != hex(0x70):
+                            #     if hex(address) == hex(0x76) and not added_BME280[0]:
+                            #         added_BME280[0] = True
+                            #         virtual_sensor = BME280(self.tca,
+                            #                                 channel,
+                            #                                 address,
+                            #                                 len(self.control_center["BME280"]))
+                            #         self.control_center[virtual_sensor.type][0].append(virtual_sensor)
+                            #         self.control_center[virtual_sensor.type][1].append(address)
                                     
-                                elif hex(address) == hex(0x77) and not added_BME280[1]:
-                                    added_BME280[1] = True
-                                    virtual_sensor = BME280(self.tca,
-                                                            channel,
-                                                            address,
-                                                            len(self.control_center["BME280"]))
-                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
+                            #     elif hex(address) == hex(0x77) and not added_BME280[1]:
+                            #         added_BME280[1] = True
+                            #         virtual_sensor = BME280(self.tca,
+                            #                                 channel,
+                            #                                 address,
+                            #                                 len(self.control_center["BME280"]))
+                            #         self.control_center[virtual_sensor.type].append(virtual_sensor)
 
-                                elif hex(address) == hex(0x44) and not added_SHT31[0]:
-                                    added_SHT31[0] = True
-                                    virtual_sensor = SHT31(self.tca,
-                                                           channel,
-                                                           address,
-                                                           len(self.control_center["SHT31"]))
-                                    self.control_center[virtual_sensor.type].append(virtual_sensor) 
+                            #     elif hex(address) == hex(0x44) and not added_SHT31[0]:
+                            #         added_SHT31[0] = True
+                            #         virtual_sensor = SHT31(self.tca,
+                            #                                channel,
+                            #                                address,
+                            #                                len(self.control_center["SHT31"]))
+                            #         self.control_center[virtual_sensor.type].append(virtual_sensor) 
 
-                                elif hex(address) == hex(0x45) and not added_SHT31[1]:
-                                    added_SHT31[1] = True
-                                    virtual_sensor = SHT31(self.tca,
-                                                           channel,
-                                                           address,
-                                                           len(self.control_center["SHT31"]))
-                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
+                            #     elif hex(address) == hex(0x45) and not added_SHT31[1]:
+                            #         added_SHT31[1] = True
+                            #         virtual_sensor = SHT31(self.tca,
+                            #                                channel,
+                            #                                address,
+                            #                                len(self.control_center["SHT31"]))
+                            #         self.control_center[virtual_sensor.type].append(virtual_sensor)
 
-                                elif hex(address) == hex(0x5A) and not added_MLX:
-                                    added_MLX = True
-                                    virtual_sensor = MLX90614(self.tca,
-                                                         channel,
-                                                         address,
-                                                         len(self.control_center["MLX90614"]))
-                                    self.control_center[virtual_sensor.type].append(virtual_sensor)
+                            #     elif hex(address) == hex(0x5A) and not added_MLX:
+                            #         added_MLX = True
+                            #         virtual_sensor = MLX90614(self.tca,
+                            #                              channel,
+                            #                              address,
+                            #                              len(self.control_center["MLX90614"]))
+                            #         self.control_center[virtual_sensor.type].append(virtual_sensor)
                                     
                     except ValueError:
                         print(f"Error in Port: {channel}, sensor : {NAME[address]}, address : {address}")
@@ -564,6 +578,7 @@ class MLX90614(Sensor):
         self.set_properties_names(['amb_T','obj_T'])
         self.all_set_fun =[self.set_amb_T,self.set_obj_T]
 
+        】】】】
     def set_amb_T (self,*value):
         if len(value) == 0:
             amb_T = self.get_real_sensor().ambient_temperature
