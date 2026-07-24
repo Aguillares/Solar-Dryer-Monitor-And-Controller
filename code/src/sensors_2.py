@@ -216,7 +216,12 @@ class Dog_Watcher():
         for type in inter_var:
             num = len(self.control_center[type])
             if num > 0:
-                print(f"{num} " + type + ' connected')
+                print(f"{num} " + type + ' connected. Addresses: ')
+                for num,sensor in enumerate(self.control_center[type]):
+                    print(sensor.address,end='')
+                    if num < len(self.control_center[type]):
+                        print(end=', ')
+                    
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array, they are ones in deed.
                 del self._connected_sensors[self._connected_sensors.index(type)]
@@ -420,11 +425,12 @@ class Dog_Watcher():
         self.results_avg = str(self.results_avg)
 
 class Sensor():
-    def __init__(self,sensor,type_, port, number):
+    def __init__(self,sensor,type_, port, number,address):
         self.sensor = sensor
         self.type = type_
         self.set_port(port)
         self.set_number(number)
+        self.address = address
         self.name = self.type + '_' + str(self.port) + '_' + str(self.number)
         self.all_properties_values = []
         self.all_properties_names = []
