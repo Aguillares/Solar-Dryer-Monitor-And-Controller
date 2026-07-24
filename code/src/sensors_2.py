@@ -161,7 +161,10 @@ class Dog_Watcher():
                     try:
                         # We have different addresses according to the sensor.
                         for address in addresses:
-                            sensor_name = NAME[address]
+                            try:
+                                sensor_name = NAME[address]
+                            except KeyError:
+                                continue
                             if not address in self.control_center[sensor_name][1]:
 
                                 self.control_center[sensor_name][0].append(sensors_type[sensor_name](self.tca,
