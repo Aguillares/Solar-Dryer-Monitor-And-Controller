@@ -5,7 +5,6 @@ Created on Mon Sep  9 06:40:26 2024
 @author: perro
 """
 
-
 import re
 import glob
 import time
@@ -22,6 +21,8 @@ from adafruit_sht31d import SHT31D as sht31d
 from pathlib import Path
 from settings import NAME
 import os
+import asyncio
+
 
 
 class Dog_Watcher():
@@ -265,7 +266,7 @@ class Dog_Watcher():
                     init_path=str(self._data_dir.relative_to(self._parent_dir))
                     print(f"\nThe new {init_path = }")
                     init_file.write(init_path)
-                    
+
             except FileExistsError:
                 print(self._data_dir)
                 self._file_detection(replica_number+1)
@@ -419,9 +420,9 @@ class Dog_Watcher():
         self.results_avg = str(self.results_avg)
 
 class Sensor():
-    def __init__(self,sensor,type, port, number):
+    def __init__(self,sensor,type_, port, number):
         self.sensor = sensor
-        self.type = type
+        self.type = type_
         self.set_port(port)
         self.set_number(number)
         self.name = self.type + '_' + str(self.port) + '_' + str(self.number)
@@ -438,7 +439,6 @@ class Sensor():
     
     def set_number(self,number):
         self.number = number
-    
     
     def get_port(self):
         return self.port
@@ -459,7 +459,7 @@ class Sensor():
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
             try:
-            #We are going to round it to round it to two places
+            # We are going to round it to round it to two places
                 print(f"{self.__class__.__name__}, {set_fun.__name__ = }")
                 self.all_properties_values.append(float(round(set_fun(),2)))
             except RuntimeError as e:
@@ -478,7 +478,6 @@ class Sensor():
     
     def get_properties(self):
         return self.all_properties_names
-
     
     def set_properties_names(self,properties_names):
         self.all_properties_names = properties_names
@@ -492,32 +491,40 @@ class Sensor():
             
     def get_real_sensor(self):
         return self.sensor
-        
-class BME280(Sensor):
-    def __init__(self,tca,channel,address,number):
-        super().__init__(adafruit_bme280.Adafruit_BME280_I2C(tca[channel],address),'BME280',channel,number)
+
+class BME280SHT31(Sensor):
+    def __init__(self,sensor,type_, port, number):
+        super().__init__(sensor,type_,port,number)
         self.avg_prop = {
             'T' : [],
             'RH' : [],
-            'P' : []
         }
+
+    def set_T (self,*value):
+            if len(value) == 0:
+                temp = self.get_real_sensor().temperature
+            else:
+                temp = value
+            return temp
+            
+            
+    def set_RH(self,*value):
+        if len(value) == 0:
+            humidity = self.get_real_sensor().relative_humidity
+            
+        else:
+            humidity = value
+        return humidity
+    
+
+class BME280(BME280SHT31):
+    def __init__(self,tca,port,address,number):
+        super().__init__(adafruit_bme280.Adafruit_BME280_I2C(tca[port],address),'BME280',port,number)
+        self.avg_prop['P'] = []
         
         self.set_properties_names(['T','RH','P'])
         self.set_fun([self.set_T,self.set_RH,self.set_P])
 
-    def set_T (self,*value):
-        if len(value) == 0:
-            temp = self.get_real_sensor().temperature
-        else:
-            temp = value
-        return temp
-        
-    def set_RH(self,*value):
-        if len(value) == 0:
-            humidity = self.get_real_sensor().humidity
-        else:
-            humidity = value
-        return humidity
         
     def set_P(self,*value):
         if len(value) == 0:
@@ -526,34 +533,14 @@ class BME280(Sensor):
             pressure = value
         return pressure
 
-class SHT31(Sensor):
+class SHT31(BME280SHT31):
     def __init__(self,tca,channel,address,number):
         super().__init__(sht31d(tca[channel],address),'SHT31',channel,number)
-        self.avg_prop = {
-            'T' : [],
-            'RH' : [],
-        }
         self.set_properties_names(['T','RH'])
         self.set_fun([self.set_T,self.set_RH])
 
     def set_heater(self,heater_command):
         self.sensor.heater = heater_command
-
-    def set_T (self,*value):
-        if len(value) == 0:
-            temp = self.get_real_sensor().temperature
-        else:
-            temp = value
-        return temp
-        
-        
-    def set_RH(self,*value):
-        if len(value) == 0:
-            humidity = self.get_real_sensor().relative_humidity
-            
-        else:
-            humidity = value
-        return humidity
 
 class MLX90614(Sensor):
     def __init__(self,tca,channel,address,number):
