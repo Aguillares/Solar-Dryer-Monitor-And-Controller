@@ -499,8 +499,9 @@ class Sensor():
         return self.sensor
 
 class BME280SHT31(Sensor):
-    def __init__(self,sensor,type_, port, number):
-        super().__init__(sensor,type_,port,number)
+    def __init__(self,sensor,type_, port, number,address):
+        super().__init__(sensor,type_,port,number,address)
+
         self.avg_prop = {
             'T' : [],
             'RH' : [],
@@ -515,9 +516,9 @@ class BME280SHT31(Sensor):
             
             
     def set_RH(self,*value):
+        
         if len(value) == 0:
             humidity = self.get_real_sensor().relative_humidity
-            
         else:
             humidity = value
         return humidity
@@ -525,7 +526,7 @@ class BME280SHT31(Sensor):
 
 class BME280(BME280SHT31):
     def __init__(self,tca,port,address,number):
-        super().__init__(adafruit_bme280.Adafruit_BME280_I2C(tca[port],address),'BME280',port,number)
+        super().__init__(adafruit_bme280.Adafruit_BME280_I2C(tca[port],address),'BME280',port,number,address)
         self.avg_prop['P'] = []
         
         self.set_properties_names(['T','RH','P'])
@@ -541,7 +542,7 @@ class BME280(BME280SHT31):
 
 class SHT31(BME280SHT31):
     def __init__(self,tca,channel,address,number):
-        super().__init__(sht31d(tca[channel],address),'SHT31',channel,number)
+        super().__init__(sht31d(tca[channel],address),'SHT31',channel,number,address)
         self.set_properties_names(['T','RH'])
         self.set_fun([self.set_T,self.set_RH])
 
@@ -550,7 +551,7 @@ class SHT31(BME280SHT31):
 
 class MLX90614(Sensor):
     def __init__(self,tca,channel,address,number):
-        super().__init__(mlx90614(tca[channel],address),'MLX90614',channel,number)
+        super().__init__(mlx90614(tca[channel],address),'MLX90614',channel,number,address)
         self.avg_prop = {
             'amb_T' : [],
             'obj_T' : [],
