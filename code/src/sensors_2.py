@@ -219,8 +219,10 @@ class Dog_Watcher():
                 print(f"{num} " + type + ' connected. Addresses: ', end='')
                 for num,sensor in enumerate(self.control_center[type]):
                     print(sensor.address,end='')
-                    if num < len(self.control_center[type]):
+                    if num < len(self.control_center[type])-1:
                         print(end=', ')
+                    else:
+                        print()
                     
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array, they are ones in deed.
