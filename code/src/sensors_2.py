@@ -231,7 +231,7 @@ class Dog_Watcher():
             num = len(self.control_center[type])
             if num > 0:
                 print(f"{num} " + type + ' connected. Addresses: ', end='')
-                for num,sensor in enumerate(self.control_center[type]):
+                for num,sensor in enumerate(self.control_center[type][0]):
                     print(sensor.address,end='')
                     if num < len(self.control_center[type])-1:
                         print(end=', ')
@@ -302,8 +302,8 @@ class Dog_Watcher():
         header = ''
         # All connected sensors are considered to make the header.
         
-        for type in self._connected_sensors:
-            for virtual_sensor in self.control_center[type]:
+        for type_ in self._connected_sensors:
+            for virtual_sensor in self.control_center[type_][0]:
                 for property in virtual_sensor.get_properties():
                     header = header+',' + virtual_sensor.get_name()+'_'+property
                     
@@ -313,11 +313,11 @@ class Dog_Watcher():
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
         for connected_sensor in self._connected_sensors:
-            properties = self.control_center[connected_sensor][0].get_properties()
+            properties = self.control_center[connected_sensor][0][0].get_properties()
             for property in properties:
                 values = []
                 print(f"{connected_sensor+'_'+property}: ",end='')
-                virtual_sensors= self.control_center[connected_sensor]
+                virtual_sensors= self.control_center[connected_sensor][0]
                 for virtual_sensor in virtual_sensors:
                     values.append(float(virtual_sensor.avg_prop[property][self.trigger_number]))
                     if data_type == 'Average':
@@ -335,8 +335,8 @@ class Dog_Watcher():
 
     def data_operation(self):
         # Maybe here we can add a clock to see the differences between sensors' time.
-        for type in self._connected_sensors:
-            for virtual_sensor in self.control_center[type]:
+        for type_ in self._connected_sensors:
+            for virtual_sensor in self.control_center[type_][0]:
                 try:
                     self.avg_exception = False
                     virtual_sensor.trigger()
@@ -362,8 +362,8 @@ class Dog_Watcher():
             virtual_sensor.avg_prop[property].append(value)
 
     def set_avg_prop(self):
-        for type in self._connected_sensors:
-            for virtual_sensor in self.control_center[type]:
+        for type_ in self._connected_sensors:
+            for virtual_sensor in self.control_center[type_][0]:
                 properties = virtual_sensor.get_properties()
                 prop = properties[0]
                 # If one average value doesn't work, none of the others work. They are not useful.
@@ -428,7 +428,7 @@ class Dog_Watcher():
         self.results_avg = []
         i=0
         for connected_sensor in self._connected_sensors:
-            for virtual_sensor in self.control_center[connected_sensor]:
+            for virtual_sensor in self.control_center[connected_sensor][0]:
                 for value in virtual_sensor.avg_prop.values():
                     # The array has just one value
                     self.results_avg.append(float(value[0]))
@@ -578,7 +578,6 @@ class MLX90614(Sensor):
         self.set_properties_names(['amb_T','obj_T'])
         self.all_set_fun =[self.set_amb_T,self.set_obj_T]
 
-        】】】】
     def set_amb_T (self,*value):
         if len(value) == 0:
             amb_T = self.get_real_sensor().ambient_temperature
