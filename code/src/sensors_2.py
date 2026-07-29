@@ -230,12 +230,12 @@ class Dog_Watcher():
     def remove_sensors(self):
         inter_var = self._connected_sensors.copy()
         
-        for type in inter_var:
-            total_num = len(self.control_center[type][0])
+        for type, obj_addr in self.control_center.items():
+            total_num = len(obj_addr[1])
             if total_num > 0:
                 print(f"{total_num} " + type + ' connected. Addresses: ', end='')
-                for curr_num, sensor in enumerate(self.control_center[type][0]):
-                    print(sensor.address,end='')
+                for curr_num, addr in enumerate(obj_addr[1]):
+                    print(addr,end='')
                     if curr_num < total_num-1:
                         print(end=', ')
                     else:
