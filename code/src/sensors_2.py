@@ -146,18 +146,14 @@ class Dog_Watcher():
         for channel in range(8):
              # "attempts" to check if there are sensors connected to a channel, 5 for each channel.
              # After it is added one sensor, no more are accepted with the same address, because we are going to save the same sensor again.
-            added_BME280 = [False, False] # We have two addressess for this sensor.
-            added_SHT31 = [False, False] # We have two addresses for this sensor.
-            added_MLX = False
-            
+      
             for _ in range(3):
                 try:
                     if self.tca[channel].try_lock():
                         addresses = self.tca[channel].scan()
                    
-                    #After it is scanned we are going to unlock it again, to let communation flow later
+                    #After it is scanned we are going to unlock it again, to let communication flow later
                     self.tca[channel].unlock()
-                    
                     try:
                         # We have different addresses according to the sensor.
                         for address in addresses:
@@ -170,49 +166,8 @@ class Dog_Watcher():
                                 self.control_center[sensor_name][0].append(sensors_type[sensor_name](self.tca,
                                                                 channel,
                                                                 address,
-                                                                len(self.control_center[sensor_name])))
+                                                                len(self.control_center[sensor_name][1])))
                                 self.control_center[sensor_name][1].append(address)
-                            # if hex(address) != hex(0x70):
-                            #     if hex(address) == hex(0x76) and not added_BME280[0]:
-                            #         added_BME280[0] = True
-                            #         virtual_sensor = BME280(self.tca,
-                            #                                 channel,
-                            #                                 address,
-                            #                                 len(self.control_center["BME280"]))
-                            #         self.control_center[virtual_sensor.type][0].append(virtual_sensor)
-                            #         self.control_center[virtual_sensor.type][1].append(address)
-                                    
-                            #     elif hex(address) == hex(0x77) and not added_BME280[1]:
-                            #         added_BME280[1] = True
-                            #         virtual_sensor = BME280(self.tca,
-                            #                                 channel,
-                            #                                 address,
-                            #                                 len(self.control_center["BME280"]))
-                            #         self.control_center[virtual_sensor.type].append(virtual_sensor)
-
-                            #     elif hex(address) == hex(0x44) and not added_SHT31[0]:
-                            #         added_SHT31[0] = True
-                            #         virtual_sensor = SHT31(self.tca,
-                            #                                channel,
-                            #                                address,
-                            #                                len(self.control_center["SHT31"]))
-                            #         self.control_center[virtual_sensor.type].append(virtual_sensor) 
-
-                            #     elif hex(address) == hex(0x45) and not added_SHT31[1]:
-                            #         added_SHT31[1] = True
-                            #         virtual_sensor = SHT31(self.tca,
-                            #                                channel,
-                            #                                address,
-                            #                                len(self.control_center["SHT31"]))
-                            #         self.control_center[virtual_sensor.type].append(virtual_sensor)
-
-                            #     elif hex(address) == hex(0x5A) and not added_MLX:
-                            #         added_MLX = True
-                            #         virtual_sensor = MLX90614(self.tca,
-                            #                              channel,
-                            #                              address,
-                            #                              len(self.control_center["MLX90614"]))
-                            #         self.control_center[virtual_sensor.type].append(virtual_sensor)
                                     
                     except ValueError:
                         print(f"Error in Port: {channel}, sensor : {NAME[address]}, address : {address}")
@@ -228,12 +183,10 @@ class Dog_Watcher():
         self.control_center[virtual_sensor.type].append(virtual_sensor)
 
     def remove_sensors(self):
-        inter_var = self._connected_sensors.copy()
-        
-        for type, obj_addr in self.control_center.items():
+        for type_, obj_addr in self.control_center.items():
             total_num = len(obj_addr[1])
             if total_num > 0:
-                print(f"{total_num} " + type + ' connected. Addresses: ', end='')
+                print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
                 for curr_num, addr in enumerate(obj_addr[1]):
                     print(addr,end='')
                     if curr_num < total_num-1:
@@ -243,7 +196,7 @@ class Dog_Watcher():
                     
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array, they are ones in deed.
-                del self._connected_sensors[self._connected_sensors.index(type)]
+                del self._connected_sensors[self._connected_sensors.index(type_)]
             
             time.sleep(1)
         
