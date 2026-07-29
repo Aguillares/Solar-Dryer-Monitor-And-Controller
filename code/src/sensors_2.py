@@ -231,12 +231,12 @@ class Dog_Watcher():
         inter_var = self._connected_sensors.copy()
         
         for type in inter_var:
-            num = len(self.control_center[type][0])
-            if num > 0:
-                print(f"{num} " + type + ' connected. Addresses: ', end='')
-                for num,sensor in enumerate(self.control_center[type][0]):
+            total_num = len(self.control_center[type][0])
+            if total_num > 0:
+                print(f"{total_num} " + type + ' connected. Addresses: ', end='')
+                for curr_num, sensor in enumerate(self.control_center[type][0]):
                     print(sensor.address,end='')
-                    if num < len(self.control_center[type])-1:
+                    if curr_num < total_num-1:
                         print(end=', ')
                     else:
                         print()
