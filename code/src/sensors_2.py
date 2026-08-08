@@ -494,7 +494,7 @@ class BME280SHT31(Sensor):
             'RH' : [],
         }
 
-    def set_T (self,value= None|float):
+    def set_T (self,value = None):
             """Sets a 
 
             If a value is given, it is passed to 'temp' variable,
