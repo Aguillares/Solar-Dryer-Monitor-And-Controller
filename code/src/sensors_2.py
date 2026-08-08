@@ -486,7 +486,7 @@ class Sensor():
 
 class BME280SHT31(Sensor):
     """It encompasses both, the BME280 and SHT31"""
-    def __init__(self,sensor:Bme280,type_: str, port:int, number:int,address:int):
+    def __init__(self,sensor:Bme280|sht31d,type_: str, port:int, number:int,address:int):
         super().__init__(sensor,type_,port,number,address)
 
         self.avg_prop = {
