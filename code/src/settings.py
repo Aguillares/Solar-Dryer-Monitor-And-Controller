@@ -10,7 +10,7 @@ FULL_MIN_RANGE = [str(x) for x in range(60)]
 SEC_RANGE = [str(x) for x in range(60)]
 
 # Addresses
-NAME = {
+SENSORS_NAMES = {
     0x44 : "SHT31",
     0x45 : "SHT31",
     0x5A : "MLX90614",
