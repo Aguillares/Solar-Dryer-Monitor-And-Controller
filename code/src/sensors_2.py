@@ -537,8 +537,8 @@ class BME280(BME280SHT31):
         return pressure
 
 class SHT31(BME280SHT31):
-    def __init__(self,tca,channel,address,number):
-        super().__init__(sht31d(tca[channel],address),'SHT31',channel,number,address)
+    def __init__(self,tca:Tca9548a,port:int,number:int,address:int):
+        super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
         self.set_properties_names(['T','RH'])
         self.set_fun([self.set_T,self.set_RH])
 
