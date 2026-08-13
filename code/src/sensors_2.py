@@ -59,8 +59,8 @@ class Dog_Watcher():
             print(" "*len(message),end='\r')
     
     def setup(self):
-        """All sensors are detected by each channel  of the multiplexor
-        and whether apparently we don't see any of them we are going to 
+        """All sensors are detected by each channel  of the multiplexer
+        and whether apparently we don't see any of them, we are going to 
         try 4 times more"""
         # Scanning the channels.
         self._scanner()
@@ -87,8 +87,8 @@ class Dog_Watcher():
             self.setup()
             return  # To finish before going next, just the original has to continue.
         
-        self.display_trigger = 5*1    # 5 seconds
-        self.average_trigger = 0*60+ 3*5  # 5 min
+        self.display_trigger = 5*1    # Each time is taken information.
+        self.average_trigger = 0*60+ 3*5  # Up to this point, all data is averaged.
         # The minimum amount of samples is 80% of what we triggered
         self._minimum_sample = np.ceil((self.average_trigger/self.display_trigger)*0.8) # To have at least 80% of the data.
         # We start with this header and we develop it with _create_header method
@@ -124,7 +124,7 @@ class Dog_Watcher():
         """
         It detects all sensors in the multiplexor, transversing each channel
         """
-        print("Sensors Scanner", end='')
+        print("Sensors' Scanner", end='')
         for _ in range(3):
             print(".",end='')
             time.sleep(0.25)
@@ -136,7 +136,7 @@ class Dog_Watcher():
         self._tca = adafruit_tca9548a.TCA9548A(self._i2c)
         # We initialize the dictionary "control_center" to save all data related to them.
         # First array: the objects themselves.
-        # Second array: the addresses.     
+        # Second array: the objects' addresses.     
         self._control_center = {
             "BME280" : [[],[]],
             "MLX90614" : [[],[]],
@@ -144,16 +144,18 @@ class Dog_Watcher():
         }
 
         # When it is invoked, an object of the corresponding class is created.
-        sensors_type = {
+        sensor_types = {
             "BME280" : BME280,
             "SHT31" : SHT31,
             "MLX90614" : MLX90614
         }
 
-        # We have 8 channels or ports.
+        # We have 8 ports in total.
         for port in range(8):
-             # "attempts" to check if there are sensors connected to a channel, 3 times for each channel.
-             # After it is added one sensor, no more are accepted with the same address, because we are going to save the same sensor again.
+             # We have to check if there are sensors connected in any channel, 3 times for each.
+             # After one sensor is added with a particular address, 
+             # no more sensors with the same address are going to be accepted, 
+             # because we are going to save the same sensor again.
       
             for _ in range(3):
                 try:
@@ -161,7 +163,7 @@ class Dog_Watcher():
                     if self._tca[port].try_lock():
                         addresses = self._tca[port].scan()
                    
-                    #After it is scanned we are going to unlock it again, to let communication flow later
+                    #After it is scanned, we are going to unlock it, to let communication flow later.
                     self._tca[port].unlock()
                     try:
                         # We have different addresses according to the sensor.
@@ -170,13 +172,13 @@ class Dog_Watcher():
                             try:
                                 sensor_name = SENSORS_NAMES[address]
                             except KeyError:
-                                # As this address doesn't match any of the sensors, we need to go to the next loop.
+                                # As this address doesn't match any of the sensors' names, we need to go to the next loop.
                                 continue
 
                             # Whether we go in, it means the array doesn't have that specific address,
-                            # which means we need to add it.
+                            # which says we need to add it.
                             if not address in self._control_center[sensor_name][1]:
-                                self._control_center[sensor_name][0].append(sensors_type[sensor_name](self._tca,
+                                self._control_center[sensor_name][0].append(sensor_types[sensor_name](self._tca,
                                                                 port,
                                                                 len(self._control_center[sensor_name][1]),    
                                                                 address))
@@ -271,7 +273,6 @@ class Dog_Watcher():
         # All the sensors listed under, they EXIST.
         header = ''
         # All connected sensors are considered to make the header.
-        
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
                 for property in virtual_sensor.get_properties():
@@ -426,7 +427,7 @@ class Sensor():
     def get_name(self):
         return self.name
     
-    def get_number(self):
+    def __get_number(self):
         return self.number
 
     def get_port(self):
@@ -448,6 +449,7 @@ class Sensor():
         self.sensor = sensor
     
     def trigger(self):
+        
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
             try:
@@ -495,8 +497,7 @@ class BME280SHT31(Sensor):
         }
 
     def set_T (self,value = None):
-            """Sets a 
-
+            """Sets a temperature if 
             If a value is given, it is passed to 'temp' variable,
             """
             if value is None:
@@ -530,6 +531,8 @@ class BME280(BME280SHT31):
 
         
     def set_P(self,*value):
+        """Retrieves pressure
+        """
         if len(value) == 0:
             pressure = self.get_real_sensor().pressure
         else:
@@ -626,6 +629,9 @@ if __name__ == "__main__":
         GPIO.output(23,True)
         dog_watcher = Dog_Watcher()
         #dog_watcher.init()
+        d=Sensor(1,'2',3,4,5)
+        d.get_name
+        
         dog_watcher.setup()
         dog_watcher.save_data()
             
