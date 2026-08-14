@@ -275,7 +275,7 @@ class Dog_Watcher():
         # All connected sensors are considered to make the header.
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
-                for property in virtual_sensor.get_properties():
+                for property in virtual_sensor.all_properties_names:
                     header = header+',' + virtual_sensor.get_name()+'_'+property
                     
         self._header = self._header+header 
@@ -284,7 +284,7 @@ class Dog_Watcher():
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
         for connected_sensor in self._connected_sensors:
-            properties = self._control_center[connected_sensor][0][0].get_properties()
+            properties = self._control_center[connected_sensor][0][0].all_properties_names
             for property in properties:
                 values = []
                 print(f"{connected_sensor+'_'+property}: ",end='')
@@ -323,7 +323,7 @@ class Dog_Watcher():
     def add_avg_data(self, virtual_sensor):
         # This "i" is just for the detection of the properties' name
         i = 0
-        for property in virtual_sensor.get_properties():
+        for property in virtual_sensor.all_properties_names:
             # Now we want to know the property name according to "sensor_property_value"
             if not self.avg_exception:
                 value = virtual_sensor.get_values()[i]
@@ -335,7 +335,7 @@ class Dog_Watcher():
     def set_avg_prop(self):
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
-                properties = virtual_sensor.get_properties()
+                properties = virtual_sensor.all_properties_names
                 prop = properties[0]
                 # If one average value doesn't work, none of the others work. They are not useful.
                 normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self._minimum_sample
@@ -412,32 +412,41 @@ class Dog_Watcher():
         self.results_avg = str(self.results_avg)
 
 class Sensor():
+    """
+
+    General class of any sensor
+    
+    ...
+    
+    Attributes
+    ----------
+    
+    Methods
+    -------
+    """
     def __init__(self,sensor:Bme280|sht31d,type_:str, port:int, number:int,address:int):
         self.sensor = sensor
         self.type = type_
-        self.set_port(port)
-        self.set_number(number)
+        self.port = port
+        self.number = number
         self.address = address
         self.name = self.type + '_' + str(self.port) + '_' + str(self.number)
         self.all_properties_values = []
         self.all_properties_names = []
         self.all_set_fun = []
         self.attempts_trigger = 0
-    
-    def get_name(self):
-        return self.name
-    
-    def __get_number(self):
-        return self.number
-
-    def get_port(self):
-            return self.port
-
-    def get_sensor(self):
-            return self.sensor
 
     def get_type(self):
-            return self.type
+        return self.type
+
+    def get_values(self):
+        return self.all_properties_values
+        
+    def get_properties(self):
+        return self.all_properties_names
+
+    def get_real_sensor(self):
+        return self.sensor
             
     def set_number(self,number):
         self.number = number
@@ -445,20 +454,37 @@ class Sensor():
     def set_port(self,port):
         self.port = port
     
-    def set_sensor(self,sensor):
+    def set_real_sensor(self,sensor):
         self.sensor = sensor
-    
-    def trigger(self):
+
+    def set_type(self,type_):
+        self.type = type_
+
+    def set_properties_names(self,properties_names):
+        self.all_properties_names = properties_names
         
+    def set_fun(self,funcs):
+        self.all_set_fun = funcs
+    
+    def set_all(self,value):
+        for set_fun in self.all_set_fun:
+            set_fun(value)
+
+    def set_address(self,address):
+        self.address = address
+
+    def trigger(self):
+        """Triggers all sensors"""
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
             try:
-            # We are going to round it to round it to two places
+            # We are going to round it to two places
                 print(f"{self.__class__.__name__}, {set_fun.__name__ = }")
                 self.all_properties_values.append(float(round(set_fun(),2)))
             except RuntimeError as e:
                 print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
-            
+
+        # It detects if there are 'nan' values in the array.
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
                 self.set_all(np.nan)
@@ -466,29 +492,25 @@ class Sensor():
                 
             self.attempts_trigger = self.attempts_trigger+1
             self.trigger()
-                  
-    def get_values(self):
-        return self.all_properties_values
-    
-    def get_properties(self):
-        return self.all_properties_names
-    
-    def set_properties_names(self,properties_names):
-        self.all_properties_names = properties_names
-    
-    def set_fun(self,funcs):
-        self.all_set_fun = funcs
-    
-    def set_all(self,value):
-        for set_fun in self.all_set_fun:
-            set_fun(value)
-            
-    def get_real_sensor(self):
-        return self.sensor
 
-class BME280SHT31(Sensor):
-    """It encompasses both, the BME280 and SHT31"""
+class T_RH_Sensor(Sensor):
+    """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
+        supports temperature and relative humidity."""
+    
     def __init__(self,sensor:Bme280|sht31d,type_: str, port:int, number:int,address:int):
+        """
+        Parameters
+        ----------
+        sensor : Bme280|sht31d
+            The sensors that take temperature and relative humidity
+        type_ : str
+            The supported types, BME280 and SHT31
+        port : int
+            The port where it is connected
+        number : int
+            The number of sensor: 0, 1, 2, ...
+        address : int 
+            The address that the sensor has"""
         super().__init__(sensor,type_,port,number,address)
 
         self.avg_prop = {
@@ -497,8 +519,14 @@ class BME280SHT31(Sensor):
         }
 
     def set_T (self,value = None):
-            """Sets a temperature if 
-            If a value is given, it is passed to 'temp' variable,
+            """Sets the temperature whether 'value' is given
+            
+            If the argument value is not given, the sensor takes data.
+
+            Parameter 
+            ---------
+            value : float, optional
+                The current temperature (default None)
             """
             if value is None:
                 temp = self.get_real_sensor().temperature
@@ -507,9 +535,17 @@ class BME280SHT31(Sensor):
             return temp
             
             
-    def set_RH(self,*value):
+    def set_RH(self,value = None):
+        """Sets the relative humidity whether 'value' is given
+                    
+            If the argument value is not given, the sensor takes data.
 
-        if len(value) == 0:
+            Parameter 
+            ---------
+            value : float, optional
+                The current relative humidity (default None)
+        """
+        if value is None:
             humidity = self.get_real_sensor().relative_humidity
         else:
             humidity = value
@@ -518,20 +554,38 @@ class BME280SHT31(Sensor):
 _T =TypeVar("_T")    
 ListOrSet: TypeAlias = list[_T] | set[_T]
 
-class BME280(BME280SHT31):
+class BME280(T_RH_Sensor):
     """Sensor BME280 detects Temperature, Relative Humidity and Pressure"""
     def __init__(self,tca:Tca9548a,port:int,number:int,address:int) -> None:
+        """
+            Parameters
+            ----------
+            tca : Tca9548a
+                The multiplexer object that let connect different sensors with the same
+                address in the same microntroller
+            port : int
+                The port where it is connected
+            number : int
+                The number of sensor: 0, 1, 2, ...
+            address : int 
+                The address that the sensor has"""
         super().__init__(adafruit_bme280.Adafruit_BME280_I2C(tca[port],address),'BME280',port,number,address)
         # It is the property that SHT31 doesn´t have.
         self.avg_prop['P'] = []
-        
         
         self.set_properties_names(['T','RH','P'])
         self.set_fun([self.set_T,self.set_RH,self.set_P])
 
         
     def set_P(self,*value):
-        """Retrieves pressure
+        """Retrieves pressure 
+
+        If the argument value is not given, the sensor takes data.
+
+        Parameter 
+        ---------
+        value : float, optional
+            The current relative humidity (default None)
         """
         if len(value) == 0:
             pressure = self.get_real_sensor().pressure
@@ -539,7 +593,7 @@ class BME280(BME280SHT31):
             pressure = value
         return pressure
 
-class SHT31(BME280SHT31):
+class SHT31(T_RH_Sensor):
     def __init__(self,tca:Tca9548a,port:int,number:int,address:int):
         super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
         self.set_properties_names(['T','RH'])
