@@ -335,7 +335,7 @@ class Center():
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
                 for property in virtual_sensor.all_properties_names:
-                    header = header+',' + virtual_sensor.get_name()+'_'+property
+                    header = header+',' + virtual_sensor.name+'_'+property
                     
         self._header = self._header+header 
         
