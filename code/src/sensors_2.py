@@ -29,10 +29,21 @@ from typing import TypeVar
 Tca9548a : TypeAlias = adafruit_tca9548a.TCA9548A
 Bme280 : TypeAlias = adafruit_bme280.Adafruit_BME280_I2C
 
-class Dog_Watcher():
+class Center():
     """
     It watches constantly the data sent by the sensors, and it is stored peridiocally
+
+    Methods
+    -------
     
+    init()
+        Initializes the program with a greeting
+    
+    setup()
+        Sets up the environment, checking if there are sensors connected
+
+    save()
+        Saves the data given by the sensors
     """
     def __init__(self):
         # These can be any type of sensors.
@@ -59,7 +70,9 @@ class Dog_Watcher():
             print(" "*len(message),end='\r')
     
     def setup(self):
-        """All sensors are detected by each channel  of the multiplexer
+        """Sets up the environment, checking if there are sensors connected
+        
+        All sensors are detected by each channel  of the multiplexer
         and whether apparently we don't see any of them, we are going to 
         try 4 times more"""
         # Scanning the channels.
@@ -119,6 +132,52 @@ class Dog_Watcher():
         # The headers should be the same.
         if self._header != header:
             self._file_detection(1)
+
+    def save_data(self):
+            with open(self._data_dir,'a') as xfile:
+                # We have here the start point.
+                self.trigger_number = 0
+                self.average_number = 0
+                self.start_time_trigger = time.time()
+                self.start_time_average = self.start_time_trigger
+                first = True
+                while True:
+                    self.current_time = time.time()
+                    # With this one we can get the values of day, month and year
+                    self.elapsed_time_trigger=int(self.current_time-self.start_time_trigger)
+                    self.elapsed_time_average=int(self.current_time-self.start_time_average)
+                    self.trigger_bool = self.elapsed_time_trigger>=self.display_trigger 
+                    self.average_bool = self.elapsed_time_average>=self.average_trigger
+                    
+                    if  self.trigger_bool or self.average_bool or first:
+                        first = False
+                        self.start_time_trigger = self.current_time
+                        self._data_operation()
+                        self.print_values('Trigger_'+str(self.trigger_number+1))
+                        self.trigger_number = self.trigger_number + 1
+                        # The minimum amount to be sure that it is representative.
+                        if self.average_bool:
+                            self.trigger_number = int(0)
+                            self.start_time_average = self.current_time
+                            self._set_avg_prop()#We are going to round it to ()
+                            # Convert `average_5min` to a string format suitable for CSV, handling NaN values properly
+                            self._join_fun()
+                            self.print_values('Average')
+                            
+                            # It is splited [Day Name, Month, Day Number, Hour, Year]
+                            self.full_time = time.ctime(self.start_time_average).split()
+                            
+                            print(f"Captured Date ={self.full_time[0]} {self.full_time[2]} {self.full_time[1]} {self.full_time[4]}, Time = {self.full_time[3]}")
+                
+                            xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg[1:-1]}\n")
+                            print("\n---------------------------------")
+                            print("Saving data in memory",end="")
+                            for _ in range(5):
+                                print(".",end="")
+                                time.sleep(0.2)
+                            print()
+                            print("---------------------------------\n")
+         
 
     def _scanner(self):
         """
@@ -193,12 +252,9 @@ class Dog_Watcher():
                     self.cleanAndExit()
 
         # We want to get rid of all addresses that are not sensors.
-        self.remove_sensors()
-    
-    def add_sensors(self,virtual_sensor):
-        self._control_center[virtual_sensor.type].append(virtual_sensor)
+        self._remove_sensors()
 
-    def remove_sensors(self):
+    def _remove_sensors(self):
         for type_, obj_addr in self._control_center.items():
             total_num = len(obj_addr[1])
             if total_num > 0:
@@ -215,9 +271,10 @@ class Dog_Watcher():
                 del self._connected_sensors[self._connected_sensors.index(type_)]
             
             time.sleep(1)
-        
-        
+          
     def _file_detection(self,replica_number):
+        """"""
+
         # Here you should modify it depending of the directory.
         # The furtherest right side should be a number.
         file_name_arr = self._data_dir.stem.rsplit('_',1)
@@ -263,11 +320,10 @@ class Dog_Watcher():
             except FileExistsError:
                 print(self._data_dir)
                 self._file_detection(replica_number+1)
-        
             
     def _create_header(self):
-        """Create header using its properties
-        as a base for making it"""
+        """Creates the header using its properties
+        as a base"""
         
         # At least there will be one sensor for that reason, the '0'
         # All the sensors listed under, they EXIST.
@@ -280,8 +336,14 @@ class Dog_Watcher():
                     
         self._header = self._header+header 
         
+    def cleanAndExit(self):
+        print("Cleaning...")
+        print("Bye!")
+        os._exit(1)
+#         sys.exit()
 
     def print_values(self,data_type):
+                
         print(f"---------------{data_type}-------------------------")
         for connected_sensor in self._connected_sensors:
             properties = self._control_center[connected_sensor][0][0].all_properties_names
@@ -293,18 +355,12 @@ class Dog_Watcher():
                     values.append(float(virtual_sensor.avg_prop[property][self.trigger_number]))
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
-                values_str = str(values)
-                print(f"{values_str[1:-1]}",end=' ')
+                
+                print(f"{str(values)[1:-1]}",end=' ')
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
-    def cleanAndExit(self):
-        print("Cleaning...")
-        print("Bye!")
-        os._exit(1)
-#         sys.exit()
-
-    def data_operation(self):
+    def _data_operation(self):
         # Maybe here we can add a clock to see the differences between sensors' time.
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
@@ -312,27 +368,28 @@ class Dog_Watcher():
                     self.avg_exception = False
                     virtual_sensor.trigger()
                     time.sleep(0.1)
-                    self.add_avg_data(virtual_sensor)
+                    self._add_avg_data(virtual_sensor)
                 except Exception:
                     self.avg_exception = True
                     print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
-                    self.add_avg_data(virtual_sensor)
+                    self._add_avg_data(virtual_sensor)
                     continue
-                    
-     
-    def add_avg_data(self, virtual_sensor):
+
+    #  Model 
+    def _add_avg_data(self, virtual_sensor):
         # This "i" is just for the detection of the properties' name
         i = 0
         for property in virtual_sensor.all_properties_names:
             # Now we want to know the property name according to "sensor_property_value"
             if not self.avg_exception:
-                value = virtual_sensor.get_values()[i]
+                value = virtual_sensor.all_properties_values[i]
                 i+=1
             else:
                 value = np.nan
             virtual_sensor.avg_prop[property].append(value)
 
-    def set_avg_prop(self):
+    # Model
+    def _set_avg_prop(self):
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
                 properties = virtual_sensor.all_properties_names
@@ -348,54 +405,8 @@ class Dog_Watcher():
                     elif normal_op:
                         # The axis is for making the mean for each row, not column.
                         virtual_sensor.avg_prop[property] = [float(round(np.nanmean(virtual_sensor.avg_prop[property]),2))]
-                        
-            
-    def save_data(self):
-        with open(self._data_dir,'a') as xfile:
-            # We have here the start point.
-            self.trigger_number = 0
-            self.average_number = 0
-            self.start_time_trigger = time.time()
-            self.start_time_average = self.start_time_trigger
-            first = True
-            while True:
-                self.current_time = time.time()
-                 # With this one we can get the values of day, month and year
-                self.elapsed_time_trigger=int(self.current_time-self.start_time_trigger)
-                self.elapsed_time_average=int(self.current_time-self.start_time_average)
-                self.trigger_bool = self.elapsed_time_trigger>=self.display_trigger 
-                self.average_bool = self.elapsed_time_average>=self.average_trigger
-                
-                if  self.trigger_bool or self.average_bool or first:
-                    first = False
-                    self.start_time_trigger = self.current_time
-                    self.data_operation()
-                    self.print_values('Trigger_'+str(self.trigger_number+1))
-                    self.trigger_number = self.trigger_number + 1
-                    # The minimum amount to be sure that it is representative.
-                    if self.average_bool:
-                        self.trigger_number = int(0)
-                        self.start_time_average = self.current_time
-                        self.set_avg_prop()#We are going to round it to ()
-                        # Convert `average_5min` to a string format suitable for CSV, handling NaN values properly
-                        self.join_fun()
-                        self.print_values('Average')
-                        
-                        # It is splited [Day Name, Month, Day Number, Hour, Year]
-                        self.full_time = time.ctime(self.start_time_average).split()
-                        
-                        print(f"Captured Date ={self.full_time[0]} {self.full_time[2]} {self.full_time[1]} {self.full_time[4]}, Time = {self.full_time[3]}")
-            
-                        xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg[1:-1]}\n")
-                        print("\n---------------------------------")
-                        print("Saving data in memory",end="")
-                        for _ in range(5):
-                            print(".",end="")
-                            time.sleep(0.2)
-                        print()
-                        print("---------------------------------\n")
-                    
-    def join_fun(self):
+                                         
+    def _join_fun(self):
         self.results_avg = []
         i=0
         for connected_sensor in self._connected_sensors:
@@ -410,6 +421,13 @@ class Dog_Watcher():
                         virtual_sensor.set_heater(False)
                         
         self.results_avg = str(self.results_avg)
+
+class CenterView():
+    pass
+
+
+class CenterController():
+    pass
 
 class Sensor():
     """
@@ -435,43 +453,10 @@ class Sensor():
         self.all_properties_names = []
         self.all_set_fun = []
         self.attempts_trigger = 0
-
-    def get_type(self):
-        return self.type
-
-    def get_values(self):
-        return self.all_properties_values
-        
-    def get_properties(self):
-        return self.all_properties_names
-
-    def get_real_sensor(self):
-        return self.sensor
-            
-    def set_number(self,number):
-        self.number = number
-    
-    def set_port(self,port):
-        self.port = port
-    
-    def set_real_sensor(self,sensor):
-        self.sensor = sensor
-
-    def set_type(self,type_):
-        self.type = type_
-
-    def set_properties_names(self,properties_names):
-        self.all_properties_names = properties_names
-        
-    def set_fun(self,funcs):
-        self.all_set_fun = funcs
     
     def set_all(self,value):
         for set_fun in self.all_set_fun:
             set_fun(value)
-
-    def set_address(self,address):
-        self.address = address
 
     def trigger(self):
         """Triggers all sensors"""
@@ -529,7 +514,7 @@ class T_RH_Sensor(Sensor):
                 The current temperature (default None)
             """
             if value is None:
-                temp = self.get_real_sensor().temperature
+                temp = self.sensor.temperature
             else:
                 temp = value
             return temp
@@ -546,7 +531,7 @@ class T_RH_Sensor(Sensor):
                 The current relative humidity (default None)
         """
         if value is None:
-            humidity = self.get_real_sensor().relative_humidity
+            humidity = self.sensor.relative_humidity
         else:
             humidity = value
         return humidity
@@ -573,8 +558,8 @@ class BME280(T_RH_Sensor):
         # It is the property that SHT31 doesn´t have.
         self.avg_prop['P'] = []
         
-        self.set_properties_names(['T','RH','P'])
-        self.set_fun([self.set_T,self.set_RH,self.set_P])
+        self.all_properties_names=['T','RH','P']
+        self.all_set_fun=[self.set_T,self.set_RH,self.set_P]
 
         
     def set_P(self,*value):
@@ -588,7 +573,7 @@ class BME280(T_RH_Sensor):
             The current relative humidity (default None)
         """
         if len(value) == 0:
-            pressure = self.get_real_sensor().pressure
+            pressure = self.sensor.pressure
         else:
             pressure = value
         return pressure
@@ -596,8 +581,8 @@ class BME280(T_RH_Sensor):
 class SHT31(T_RH_Sensor):
     def __init__(self,tca:Tca9548a,port:int,number:int,address:int):
         super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
-        self.set_properties_names(['T','RH'])
-        self.set_fun([self.set_T,self.set_RH])
+        self.all_properties_names=['T','RH']
+        self.all_set_fun=[self.set_T,self.set_RH]
 
     def set_heater(self,heater_command):
         self.sensor.heater = heater_command
@@ -612,25 +597,24 @@ class MLX90614(Sensor):
         self.amb_T = None
         self.obj_T= None
         self.all_properties_values = [self.amb_T,self.obj_T]
-        self.set_properties_names(['amb_T','obj_T'])
+        self.all_properties_names = ['amb_T','obj_T']
         self.all_set_fun =[self.set_amb_T,self.set_obj_T]
 
     def set_amb_T (self,*value):
         if len(value) == 0:
-            amb_T = self.get_real_sensor().ambient_temperature
+            amb_T = self.sensor.ambient_temperature
         else:
             amb_T = value
         return amb_T
         
     def set_obj_T(self,*value):
         if len(value) == 0:
-            obj_T = self.get_real_sensor().object_temperature
+            obj_T = self.sensor.object_temperature
         else:
             obj_T = value
         return obj_T
 
-
-class __FileManager(object):
+class FileManager(object):
     
     _mode = ''
     def __init__(self,file_path:str|Path):
@@ -651,11 +635,11 @@ class __FileManager(object):
             print(f" {exc_tb = }")
 
 
-class ReadFile(__FileManager):
+class ReadFile(FileManager):
     """It opens the file in reading and editing mode"""
     _mode = 'r+'
 
-class DetectFile(__FileManager):
+class DetectFile(FileManager):
     """It helps to detect whether the file exists or not"""
     _mode = 'x'
     def __exit__(self, exc_type,exc_value, exc_tb):
@@ -667,10 +651,10 @@ class DetectFile(__FileManager):
             print(f" {exc_value = }")
             print(f" {exc_tb = }")
     
-class OverWriteFile(__FileManager):
+class OverWriteFile(FileManager):
     _mode = 'w+'
 
-class AddInfo(__FileManager):
+class AddInfo(FileManager):
     _mode = 'a'
 
 if __name__ == "__main__":
@@ -681,11 +665,9 @@ if __name__ == "__main__":
         GPIO.output(23,False)
         time.sleep(0.1)
         GPIO.output(23,True)
-        dog_watcher = Dog_Watcher()
+        dog_watcher = Center()
         #dog_watcher.init()
-        d=Sensor(1,'2',3,4,5)
-        d.get_name
-        
+   
         dog_watcher.setup()
         dog_watcher.save_data()
             
