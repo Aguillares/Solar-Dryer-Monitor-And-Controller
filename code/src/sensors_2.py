@@ -24,10 +24,11 @@ import os
 import asyncio
 from typing import TypeAlias
 from typing import TypeVar
+from collections.abc import Callable
 
 # We need to simplify the notation
-Tca9548a : TypeAlias = adafruit_tca9548a.TCA9548A
-Bme280 : TypeAlias = adafruit_bme280.Adafruit_BME280_I2C
+tca9548a : TypeAlias = adafruit_tca9548a.TCA9548A
+bme280 : TypeAlias = adafruit_bme280.Adafruit_BME280_I2C
 
 class Center():
     """
@@ -134,49 +135,50 @@ class Center():
             self._file_detection(1)
 
     def save_data(self):
-            with open(self._data_dir,'a') as xfile:
-                # We have here the start point.
-                self.trigger_number = 0
-                self.average_number = 0
-                self.start_time_trigger = time.time()
-                self.start_time_average = self.start_time_trigger
-                first = True
-                while True:
-                    self.current_time = time.time()
-                    # With this one we can get the values of day, month and year
-                    self.elapsed_time_trigger=int(self.current_time-self.start_time_trigger)
-                    self.elapsed_time_average=int(self.current_time-self.start_time_average)
-                    self.trigger_bool = self.elapsed_time_trigger>=self.display_trigger 
-                    self.average_bool = self.elapsed_time_average>=self.average_trigger
-                    
-                    if  self.trigger_bool or self.average_bool or first:
-                        first = False
-                        self.start_time_trigger = self.current_time
-                        self._data_operation()
-                        self.print_values('Trigger_'+str(self.trigger_number+1))
-                        self.trigger_number = self.trigger_number + 1
-                        # The minimum amount to be sure that it is representative.
-                        if self.average_bool:
-                            self.trigger_number = int(0)
-                            self.start_time_average = self.current_time
-                            self._set_avg_prop()#We are going to round it to ()
-                            # Convert `average_5min` to a string format suitable for CSV, handling NaN values properly
-                            self._join_fun()
-                            self.print_values('Average')
-                            
-                            # It is splited [Day Name, Month, Day Number, Hour, Year]
-                            self.full_time = time.ctime(self.start_time_average).split()
-                            
-                            print(f"Captured Date ={self.full_time[0]} {self.full_time[2]} {self.full_time[1]} {self.full_time[4]}, Time = {self.full_time[3]}")
+        """Saves the data given by the sensors with the correct format"""
+        with open(self._data_dir,'a') as xfile:
+            # We have here the start point.
+            self.trigger_number = 0
+            self.average_number = 0
+            self.start_time_trigger = time.time()
+            self.start_time_average = self.start_time_trigger
+            first = True
+            while True:
+                self.current_time = time.time()
+                # With this one we can get the values of day, month and year
+                self.elapsed_time_trigger=int(self.current_time-self.start_time_trigger)
+                self.elapsed_time_average=int(self.current_time-self.start_time_average)
+                self.trigger_bool = self.elapsed_time_trigger>=self.display_trigger 
+                self.average_bool = self.elapsed_time_average>=self.average_trigger
                 
-                            xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg[1:-1]}\n")
-                            print("\n---------------------------------")
-                            print("Saving data in memory",end="")
-                            for _ in range(5):
-                                print(".",end="")
-                                time.sleep(0.2)
-                            print()
-                            print("---------------------------------\n")
+                if  self.trigger_bool or self.average_bool or first:
+                    first = False
+                    self.start_time_trigger = self.current_time
+                    self._triggering_averaging()
+                    self.print_values('Trigger_'+str(self.trigger_number+1))
+                    self.trigger_number = self.trigger_number + 1
+                    # The minimum amount to be sure that it is representative.
+                    if self.average_bool:
+                        self.trigger_number = int(0)
+                        self.start_time_average = self.current_time
+                        self._set_avg_prop() # We are going to round it to ()
+                        # Convert `average_5min` to a string format suitable for CSV, handling NaN values properly
+                        self._join_fun()
+                        self.print_values('Average')
+                        
+                        # It is splited [Day Name, Month, Day Number, Hour, Year]
+                        self.full_time = time.ctime(self.start_time_average).split()
+                        
+                        print(f"Captured Date ={self.full_time[0]} {self.full_time[2]} {self.full_time[1]} {self.full_time[4]}, Time = {self.full_time[3]}")
+            
+                        xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg[1:-1]}\n")
+                        print("\n---------------------------------")
+                        print("Saving data in memory",end="")
+                        for _ in range(5):
+                            print(".",end="")
+                            time.sleep(0.2)
+                        print()
+                        print("---------------------------------\n")
          
 
     def _scanner(self):
@@ -193,7 +195,7 @@ class Center():
         self._i2c = board.I2C()
         # We are going to use TCA9548A, which is a multiplexor
         self._tca = adafruit_tca9548a.TCA9548A(self._i2c)
-        # We initialize the dictionary "control_center" to save all data related to them.
+        # We initialize the dictionary "control_center" to save all data related to the sensors.
         # First array: the objects themselves.
         # Second array: the objects' addresses.     
         self._control_center = {
@@ -214,7 +216,7 @@ class Center():
              # We have to check if there are sensors connected in any channel, 3 times for each.
              # After one sensor is added with a particular address, 
              # no more sensors with the same address are going to be accepted, 
-             # because we are going to save the same sensor again.
+             # because we are going to save two different physical sensors with the same address.
       
             for _ in range(3):
                 try:
@@ -255,6 +257,7 @@ class Center():
         self._remove_sensors()
 
     def _remove_sensors(self):
+        """Removes the sensors that are not connected"""
         for type_, obj_addr in self._control_center.items():
             total_num = len(obj_addr[1])
             if total_num > 0:
@@ -273,10 +276,10 @@ class Center():
             time.sleep(1)
           
     def _file_detection(self,replica_number):
-        """"""
+        """Detects whether there's already a file with the same file"""
 
-        # Here you should modify it depending of the directory.
-        # The furtherest right side should be a number.
+        # Here you should modify it depending on the directory.
+        # The furthest right side should be a number.
         file_name_arr = self._data_dir.stem.rsplit('_',1)
         
         try:
@@ -360,16 +363,19 @@ class Center():
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
-    def _data_operation(self):
+    def _triggering_averaging(self):
+        """Calls the trigger function of all connected sensors 
+        and adds data that is going to be averaged"""
         # Maybe here we can add a clock to see the differences between sensors' time.
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
+
                 try:
                     self.avg_exception = False
                     virtual_sensor.trigger()
                     time.sleep(0.1)
                     self._add_avg_data(virtual_sensor)
-                except Exception:
+                except SensorDataError:
                     self.avg_exception = True
                     print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
                     self._add_avg_data(virtual_sensor)
@@ -377,7 +383,10 @@ class Center():
 
     #  Model 
     def _add_avg_data(self, virtual_sensor):
+        """Adds the data that is going to be averaged
+        """
         # This "i" is just for the detection of the properties' name
+
         i = 0
         for property in virtual_sensor.all_properties_names:
             # Now we want to know the property name according to "sensor_property_value"
@@ -390,7 +399,8 @@ class Center():
 
     # Model
     def _set_avg_prop(self):
-        for type_ in self._connected_sensors:
+        # The property self._connected_sensors can be eliminated
+        for type_ in self._connected_sensors: 
             for virtual_sensor in self._control_center[type_][0]:
                 properties = virtual_sensor.all_properties_names
                 prop = properties[0]
@@ -407,6 +417,7 @@ class Center():
                         virtual_sensor.avg_prop[property] = [float(round(np.nanmean(virtual_sensor.avg_prop[property]),2))]
                                          
     def _join_fun(self):
+        """Joins all results in a big array"""
         self.results_avg = []
         i=0
         for connected_sensor in self._connected_sensors:
@@ -415,7 +426,7 @@ class Center():
                     # The array has just one value
                     self.results_avg.append(float(value[0]))
                     i = i +1
-                    if connected_sensor == 'SHT31' and i == 1 and value>=70:
+                    if connected_sensor == 'SHT31' and i == 1 and value>=75:
                         virtual_sensor.set_heater(True)
                         time.sleep(0.8)
                         virtual_sensor.set_heater(False)
@@ -429,37 +440,80 @@ class CenterView():
 class CenterController():
     pass
 
+class SensorDataError(Exception):
+    pass
+
 class Sensor():
     """
 
-    General class of any sensor
+    General class for any sensor
     
     ...
     
     Attributes
     ----------
-    
+    sensor : Bme280|sht31d
+        The sensors that take temperature and relative humidity
+    type_ : str
+        The supported types, BME280 and SHT31
+    port : int
+        The port where it is connected
+    number : int
+        The number of sensor: 0, 1, 2, ...
+    address : int 
+        The address that the sensor has
+    name : str
+        The name given to the sensor with the format
+        "typeOfSensor_Port_Number
+    all_properties_values : list[float]
+        All the values given by all sensors
+    all_properties_names : list[str]
+        All the names of the properties such as Temperature, Relative Humidity, Pressure, ...
+    all_set_fun : list[Callable]
+        All the functions that trigger the sensors
+    self.attempts_trigger : int
+        The number of attempts in trying to trigger the sensors,
+        after reaching the maximum, the program is shut down
+               
     Methods
     -------
+    set_all(value : float|nan)
+        Sets a specific value for each sensor, mimicking when the sensors are triggered
     """
-    def __init__(self,sensor:Bme280|sht31d,type_:str, port:int, number:int,address:int):
+    def __init__(self,sensor:bme280|sht31d,type_:str, port:int, number:int,address:int):
+        """
+        Parameters
+        ----------
+        sensor : bme280|sht31d
+            The sensors that take temperature and relative humidity
+        type_ : str
+            The supported types, BME280 and SHT31
+        port : int
+            The port where it is connected
+        number : int
+            The number of sensor: 0, 1, 2, ...
+        address : int 
+            The address that the sensor has
+        
+        """
         self.sensor = sensor
         self.type = type_
         self.port = port
         self.number = number
         self.address = address
         self.name = self.type + '_' + str(self.port) + '_' + str(self.number)
-        self.all_properties_values = []
-        self.all_properties_names = []
+        self.all_properties_values = [float]
+        self.all_properties_names = [str]
         self.all_set_fun = []
         self.attempts_trigger = 0
     
     def set_all(self,value):
+        """Sets a specific value for each sensor, mimicking when the sensors are triggered"""
         for set_fun in self.all_set_fun:
             set_fun(value)
 
     def trigger(self):
-        """Triggers all sensors"""
+        """Triggers all the sensors"""
         self.all_properties_values = []
         for set_fun in self.all_set_fun:
             try:
@@ -473,16 +527,17 @@ class Sensor():
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
                 self.set_all(np.nan)
-                raise Exception
+                raise SensorDataError()
                 
             self.attempts_trigger = self.attempts_trigger+1
             self.trigger()
+
 
 class T_RH_Sensor(Sensor):
     """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
         supports temperature and relative humidity."""
     
-    def __init__(self,sensor:Bme280|sht31d,type_: str, port:int, number:int,address:int):
+    def __init__(self,sensor:bme280|sht31d,type_: str, port:int, number:int,address:int):
         """
         Parameters
         ----------
@@ -536,12 +591,9 @@ class T_RH_Sensor(Sensor):
             humidity = value
         return humidity
 
-_T =TypeVar("_T")    
-ListOrSet: TypeAlias = list[_T] | set[_T]
-
 class BME280(T_RH_Sensor):
     """Sensor BME280 detects Temperature, Relative Humidity and Pressure"""
-    def __init__(self,tca:Tca9548a,port:int,number:int,address:int) -> None:
+    def __init__(self,tca:tca9548a,port:int,number:int,address:int) -> None:
         """
             Parameters
             ----------
@@ -551,7 +603,7 @@ class BME280(T_RH_Sensor):
             port : int
                 The port where it is connected
             number : int
-                The number of sensor: 0, 1, 2, ...
+                The number of the sensor: 0, 1, 2, ...
             address : int 
                 The address that the sensor has"""
         super().__init__(adafruit_bme280.Adafruit_BME280_I2C(tca[port],address),'BME280',port,number,address)
@@ -562,7 +614,7 @@ class BME280(T_RH_Sensor):
         self.all_set_fun=[self.set_T,self.set_RH,self.set_P]
 
         
-    def set_P(self,*value):
+    def set_P(self,value=None):
         """Retrieves pressure 
 
         If the argument value is not given, the sensor takes data.
@@ -572,14 +624,14 @@ class BME280(T_RH_Sensor):
         value : float, optional
             The current relative humidity (default None)
         """
-        if len(value) == 0:
+        if value is None:
             pressure = self.sensor.pressure
         else:
             pressure = value
         return pressure
 
 class SHT31(T_RH_Sensor):
-    def __init__(self,tca:Tca9548a,port:int,number:int,address:int):
+    def __init__(self,tca:tca9548a,port:int,number:int,address:int):
         super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
         self.all_properties_names=['T','RH']
         self.all_set_fun=[self.set_T,self.set_RH]
