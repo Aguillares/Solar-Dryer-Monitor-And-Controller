@@ -9,7 +9,10 @@
             "type": "debugpy",
             "request": "launch",
             "program": "${file}",
-            "justMyCode": false
+            "justMyCode": false,
+            "env": {
+                "PYDEVD_DISABLE_GUI_SUPPORT": "1"
+            }
         }
     ]
 }

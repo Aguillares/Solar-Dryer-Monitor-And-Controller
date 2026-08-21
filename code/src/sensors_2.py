@@ -182,8 +182,7 @@ class Center():
          
 
     def _scanner(self):
-        """
-        It detects all sensors in the multiplexor, transversing each channel
+        """Detects all sensors in the multiplexor, transversing each channel
         """
         print("Sensors' Scanner", end='')
         for _ in range(3):
