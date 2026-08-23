@@ -370,7 +370,7 @@ class Center():
 
                 try:
                     self.avg_exception = False
-                    await virtual_sensor.trigger()
+                    asyncio.run(virtual_sensor.trigger())
                     time.sleep(0.1)
                     self._add_avg_data(virtual_sensor)
                 except SensorDataError:
@@ -526,7 +526,7 @@ class Sensor():
                 raise SensorDataError
                 
             self.attempts_trigger = self.attempts_trigger+1
-            await self.trigger()
+            asyncio.run(self.trigger())
 
 
 class T_RH_Sensor(Sensor):
@@ -568,7 +568,8 @@ class T_RH_Sensor(Sensor):
                 temp = self.sensor.temperature
             else:
                 temp = value
-            time.sleep(1)
+
+            await asyncio.sleep(1)
             return temp
             
             
@@ -587,7 +588,7 @@ class T_RH_Sensor(Sensor):
         else:
             humidity = value
 
-        time.sleep(1)
+        await asyncio.sleep(1)
 
         return humidity
 
@@ -631,7 +632,7 @@ class BME280(T_RH_Sensor):
         else:
             pressure = value
 
-        time.sleep(1)
+        await asyncio.sleep(1)
 
         return pressure
 
