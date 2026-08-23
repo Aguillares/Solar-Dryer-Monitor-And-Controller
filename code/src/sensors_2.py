@@ -504,16 +504,17 @@ class Sensor():
         for set_fun in self.all_set_fun:
             set_fun(value)
 
-    def trigger(self):
+    async def trigger(self):
         """Triggers all the sensors"""
         
         print("Data is being taken it...\n")
         start = time.perf_counter()
 
-        for set_fun,property in zip(self.all_set_fun,self.all_properties_values.keys()):
+        results = await asyncio.gather(*self.all_set_fun)
+        for value,property in zip(results,self.all_properties_values.keys()):
             try:
             # We are going to round it to two places
-                self.all_properties_values[property]=float(round(set_fun(),2))
+                self.all_properties_values[property]=float(round(value,2))
             except RuntimeError as e:
                 print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
 
@@ -522,10 +523,10 @@ class Sensor():
         if (np.isnan(list(self.all_properties_values.values())).any()):
             if self.attempts_trigger == 10:
                 self.set_all(np.nan)
-                raise SensorDataError()
+                raise SensorDataError
                 
             self.attempts_trigger = self.attempts_trigger+1
-            self.trigger()
+            asyncio.run(self.trigger())
 
 
 class T_RH_Sensor(Sensor):
@@ -553,8 +554,7 @@ class T_RH_Sensor(Sensor):
             'RH' : [],
         }
 
-    def set_T (self,value = None):
-        
+    async def set_T (self,value = None):
             """Sets the temperature whether 'value' is given
             
             If the argument value is not given, the sensor takes data.
@@ -572,7 +572,7 @@ class T_RH_Sensor(Sensor):
             return temp
             
             
-    def set_RH(self,value = None):
+    async def set_RH(self,value = None):
         """Sets the relative humidity whether 'value' is given
                     
             If the argument value is not given, the sensor takes data.
@@ -616,8 +616,7 @@ class BME280(T_RH_Sensor):
             'P':0}
         self.all_set_fun=[self.set_T,self.set_RH,self.set_P]
 
-        
-    def set_P(self,value=None):
+    async def set_P(self,value=None):
         """Retrieves pressure 
 
         If the argument value is not given, the sensor takes data.
@@ -633,6 +632,7 @@ class BME280(T_RH_Sensor):
             pressure = value
 
         time.sleep(1)
+
         return pressure
 
 class SHT31(T_RH_Sensor):
@@ -641,7 +641,7 @@ class SHT31(T_RH_Sensor):
         self.all_properties_values={'T':0,'RH':0}
         self.all_set_fun=[self.set_T,self.set_RH]
 
-    def set_heater(self,heater_command):
+    async def set_heater(self,heater_command):
         self.sensor.heater = heater_command
 
 class MLX90614(Sensor):
@@ -656,14 +656,14 @@ class MLX90614(Sensor):
         self.all_properties_values = {'amb_T':0,'obj_T':0}
         self.all_set_fun =[self.set_amb_T,self.set_obj_T]
 
-    def set_amb_T (self,*value):
+    async def set_amb_T (self,*value):
         if len(value) == 0:
             amb_T = self.sensor.ambient_temperature
         else:
             amb_T = value
         return amb_T
         
-    def set_obj_T(self,*value):
+    async def set_obj_T(self,*value):
         if len(value) == 0:
             obj_T = self.sensor.object_temperature
         else:
@@ -716,7 +716,6 @@ class AddInfo(FileManager):
 if __name__ == "__main__":
     try:
         # Reset the sensors power.
-        
         GPIO.setup(23,GPIO.OUT)
         GPIO.output(23,False)
         time.sleep(0.1)
