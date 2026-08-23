@@ -510,7 +510,7 @@ class Sensor():
         print("Data is being taken it...\n")
         start = time.perf_counter()
 
-        for property,set_fun in zip(self.all_set_fun,self.all_properties_values.keys()):
+        for set_fun,property in zip(self.all_set_fun,self.all_properties_values.keys()):
             try:
             # We are going to round it to two places
                 self.all_properties_values[property]=float(round(set_fun(),2))
