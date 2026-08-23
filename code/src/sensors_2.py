@@ -133,7 +133,7 @@ class Center():
         if self._header != header:
             self._file_detection(1)
 
-    def save_data(self):
+    async def save_data(self):
         """Saves the data given by the sensors with the correct format"""
         with open(self._data_dir,'a') as xfile:
             # We have here the start point.
@@ -153,7 +153,7 @@ class Center():
                 if  self.trigger_bool or self.average_bool or first:
                     first = False
                     self.start_time_trigger = self.current_time
-                    self._triggering_averaging()
+                    await self._triggering_averaging()
                     self.print_values('Trigger_'+str(self.trigger_number+1))
                     self.trigger_number = self.trigger_number + 1
                     # The minimum amount to be sure that it is representative.
@@ -361,7 +361,7 @@ class Center():
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
-    def _triggering_averaging(self):
+    async def _triggering_averaging(self):
         """Calls the trigger function of all connected sensors 
         and adds data that is going to be averaged"""
         # Maybe here we can add a clock to see the differences between sensors' time.
@@ -370,7 +370,7 @@ class Center():
 
                 try:
                     self.avg_exception = False
-                    virtual_sensor.trigger()
+                    await virtual_sensor.trigger()
                     time.sleep(0.1)
                     self._add_avg_data(virtual_sensor)
                 except SensorDataError:
@@ -526,7 +526,7 @@ class Sensor():
                 raise SensorDataError
                 
             self.attempts_trigger = self.attempts_trigger+1
-            asyncio.run(self.trigger())
+            await self.trigger()
 
 
 class T_RH_Sensor(Sensor):
@@ -724,7 +724,7 @@ if __name__ == "__main__":
         #dog_watcher.init()
    
         dog_watcher.setup()
-        dog_watcher.save_data()
+        asyncio.run(dog_watcher.save_data())
             
     except KeyboardInterrupt:
         print("Exiting...")
