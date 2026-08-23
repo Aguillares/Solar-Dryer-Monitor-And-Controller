@@ -519,7 +519,7 @@ class Sensor():
 
         print(f"\nElapsed time = {time.perf_counter()-start}\n")
         # It detects if there are 'nan' values in the array.
-        if (np.isnan(self.all_properties_values.values()).any()):
+        if (np.isnan(*self.all_properties_values.values()).any()):
             if self.attempts_trigger == 10:
                 self.set_all(np.nan)
                 raise SensorDataError()
