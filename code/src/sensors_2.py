@@ -510,7 +510,7 @@ class Sensor():
         print("Data is being taken it...\n")
         start = time.perf_counter()
 
-        results = await asyncio.gather(*self.all_set_fun)
+        results = await asyncio.gather(*[set_fun() for set_fun in self.all_set_fun])
         for value,property in zip(results,self.all_properties_values.keys()):
             try:
             # We are going to round it to two places
@@ -615,7 +615,7 @@ class BME280(T_RH_Sensor):
             'T':0,
             'RH':0,
             'P':0}
-        self.all_set_fun=[self.set_T(),self.set_RH(),self.set_P()]
+        self.all_set_fun=[self.set_T,self.set_RH,self.set_P]
 
     async def set_P(self,value=None):
         """Retrieves pressure 
@@ -640,7 +640,7 @@ class SHT31(T_RH_Sensor):
     def __init__(self,tca:tca9548a,port:int,number:int,address:int):
         super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
         self.all_properties_values={'T':0,'RH':0}
-        self.all_set_fun=[self.set_T(),self.set_RH()]
+        self.all_set_fun=[self.set_T,self.set_RH]
 
     async def set_heater(self,heater_command):
         self.sensor.heater = heater_command
@@ -655,7 +655,7 @@ class MLX90614(Sensor):
         self.amb_T = None
         self.obj_T= None
         self.all_properties_values = {'amb_T':0,'obj_T':0}
-        self.all_set_fun =[self.set_amb_T(),self.set_obj_T()]
+        self.all_set_fun =[self.set_amb_T,self.set_obj_T]
 
     async def set_amb_T (self,*value):
         if len(value) == 0:
