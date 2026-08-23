@@ -332,7 +332,7 @@ class Center():
         # All connected sensors are considered to make the header.
         for type_ in self._connected_sensors:
             for virtual_sensor in self._control_center[type_][0]:
-                for property in virtual_sensor.all_properties_names:
+                for property in virtual_sensor.all_properties_values.keys():
                     header = header+',' + virtual_sensor.name+'_'+property
                     
         self._header = self._header+header 
@@ -347,7 +347,7 @@ class Center():
                 
         print(f"---------------{data_type}-------------------------")
         for connected_sensor in self._connected_sensors:
-            properties = self._control_center[connected_sensor][0][0].all_properties_names
+            properties = self._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
                 print(f"{connected_sensor+'_'+property}: ",end='')
@@ -385,13 +385,9 @@ class Center():
         """
         # This "i" is just for the detection of the properties' name
 
-        i = 0
-        for property in virtual_sensor.all_properties_names:
-            # Now we want to know the property name according to "sensor_property_value"
-            if not self.avg_exception:
-                value = virtual_sensor.all_properties_values[i]
-                i+=1
-            else:
+        for property, value in virtual_sensor.all_properties_values.items():
+            # Now we want to know the property name according to the "sensor_property_value"
+            if self.avg_exception:
                 value = np.nan
             virtual_sensor.avg_prop[property].append(value)
 
@@ -400,7 +396,7 @@ class Center():
         # The property self._connected_sensors can be eliminated
         for type_ in self._connected_sensors: 
             for virtual_sensor in self._control_center[type_][0]:
-                properties = virtual_sensor.all_properties_names
+                properties = virtual_sensor.all_properties_values.keys()
                 prop = properties[0]
                 # If one average value doesn't work, none of the others work. They are not useful.
                 normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self._minimum_sample
@@ -463,9 +459,7 @@ class Sensor():
     name : str
         The name given to the sensor with the format
         "typeOfSensor_Port_Number
-    all_properties_values : list[float]
-        All the values given by all sensors
-    all_properties_names : list[str]
+    all_properties_values : dict[str:float]
         All the names of the properties such as Temperature, Relative Humidity, Pressure, ...
     all_set_fun : list[Callable]
         All the functions that trigger the sensors
@@ -500,8 +494,8 @@ class Sensor():
         self.number = number
         self.address = address
         self.name = self.type + '_' + str(self.port) + '_' + str(self.number)
-        self.all_properties_values = [float]
-        self.all_properties_names = [str]
+        self.all_properties_values = dict()
+        self.dic ={'p':2}
         self.all_set_fun = []
         self.attempts_trigger = 0
     
@@ -512,19 +506,18 @@ class Sensor():
 
     def trigger(self):
         """Triggers all the sensors"""
-        self.all_properties_values = []
+        
         print("Data is being taken it...\n")
         start = time.perf_counter()
 
-        for set_fun in self.all_set_fun:
+        for property,set_fun in zip(self.all_set_fun,self.all_properties_values.keys()):
             try:
             # We are going to round it to two places
-                print(f"{self.__class__.__name__}, {set_fun.__name__ = }")
-                self.all_properties_values.append(float(round(set_fun(),2)))
+                self.all_properties_values[property]=float(round(set_fun(),2))
             except RuntimeError as e:
                 print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
 
-        print(f"Elapsed time = {time.perf_counter()-start}")
+        print(f"\nElapsed time = {time.perf_counter()-start}\n")
         # It detects if there are 'nan' values in the array.
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
@@ -561,6 +554,7 @@ class T_RH_Sensor(Sensor):
         }
 
     def set_T (self,value = None):
+        
             """Sets the temperature whether 'value' is given
             
             If the argument value is not given, the sensor takes data.
@@ -616,7 +610,10 @@ class BME280(T_RH_Sensor):
         # It is the property that SHT31 doesn´t have.
         self.avg_prop['P'] = []
         
-        self.all_properties_names=['T','RH','P']
+        self.all_properties_values={
+            'T':0,
+            'RH':0,
+            'P':0}
         self.all_set_fun=[self.set_T,self.set_RH,self.set_P]
 
         
@@ -641,7 +638,7 @@ class BME280(T_RH_Sensor):
 class SHT31(T_RH_Sensor):
     def __init__(self,tca:tca9548a,port:int,number:int,address:int):
         super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
-        self.all_properties_names=['T','RH']
+        self.all_properties_values={'T':0,'RH':0}
         self.all_set_fun=[self.set_T,self.set_RH]
 
     def set_heater(self,heater_command):
@@ -656,8 +653,7 @@ class MLX90614(Sensor):
         }
         self.amb_T = None
         self.obj_T= None
-        self.all_properties_values = [self.amb_T,self.obj_T]
-        self.all_properties_names = ['amb_T','obj_T']
+        self.all_properties_values = {'amb_T':0,'obj_T':0}
         self.all_set_fun =[self.set_amb_T,self.set_obj_T]
 
     def set_amb_T (self,*value):
