@@ -133,7 +133,7 @@ class Center():
         if self._header != header:
             self._file_detection(1)
 
-    async def save_data(self):
+    def save_data(self):
         """Saves the data given by the sensors with the correct format"""
         with open(self._data_dir,'a') as xfile:
             # We have here the start point.
@@ -153,7 +153,7 @@ class Center():
                 if  self.trigger_bool or self.average_bool or first:
                     first = False
                     self.start_time_trigger = self.current_time
-                    await self._triggering_averaging()
+                    asyncio.run(self._triggering_averaging())
                     self.print_values('Trigger_'+str(self.trigger_number+1))
                     self.trigger_number = self.trigger_number + 1
                     # The minimum amount to be sure that it is representative.
@@ -370,7 +370,7 @@ class Center():
 
                 try:
                     self.avg_exception = False
-                    asyncio.run(virtual_sensor.trigger())
+                    await virtual_sensor.trigger()
                     time.sleep(0.1)
                     self._add_avg_data(virtual_sensor)
                 except SensorDataError:
@@ -526,7 +526,7 @@ class Sensor():
                 raise SensorDataError
                 
             self.attempts_trigger = self.attempts_trigger+1
-            asyncio.run(self.trigger())
+            await self.trigger()
 
 
 class T_RH_Sensor(Sensor):
@@ -725,7 +725,7 @@ if __name__ == "__main__":
         #dog_watcher.init()
    
         dog_watcher.setup()
-        asyncio.run(dog_watcher.save_data())
+        dog_watcher.save_data()
             
     except KeyboardInterrupt:
         print("Exiting...")
