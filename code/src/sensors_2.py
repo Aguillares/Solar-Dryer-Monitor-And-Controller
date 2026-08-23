@@ -119,10 +119,9 @@ class Center():
                 self._data_dir = self._data_dir.joinpath(item)
         self._file_detection(1) # The two is in case there's already a one file there.
         
-        
         # -TODO- Improve, imagine we want to open an existing file and want to add more information to it
         # we need to determine that the sensors connected are the same, to this file header.
-        #  
+        
         # What would it happen if we had two files with the same name, but differet headers?
         # We need to create another file to avoid mixing data.
         with ReadFile(str(self._data_dir)) as data_file:
@@ -514,6 +513,9 @@ class Sensor():
     def trigger(self):
         """Triggers all the sensors"""
         self.all_properties_values = []
+        print("Data is being taken it...\n")
+        start = time.perf_counter()
+
         for set_fun in self.all_set_fun:
             try:
             # We are going to round it to two places
@@ -522,6 +524,7 @@ class Sensor():
             except RuntimeError as e:
                 print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
 
+        print(f"Elapsed time = {time.perf_counter()-start}")
         # It detects if there are 'nan' values in the array.
         if (np.isnan(self.all_properties_values).any()):
             if self.attempts_trigger == 10:
@@ -571,6 +574,7 @@ class T_RH_Sensor(Sensor):
                 temp = self.sensor.temperature
             else:
                 temp = value
+            time.sleep(1)
             return temp
             
             
@@ -588,6 +592,9 @@ class T_RH_Sensor(Sensor):
             humidity = self.sensor.relative_humidity
         else:
             humidity = value
+
+        time.sleep(1)
+
         return humidity
 
 class BME280(T_RH_Sensor):
@@ -627,6 +634,8 @@ class BME280(T_RH_Sensor):
             pressure = self.sensor.pressure
         else:
             pressure = value
+
+        time.sleep(1)
         return pressure
 
 class SHT31(T_RH_Sensor):
