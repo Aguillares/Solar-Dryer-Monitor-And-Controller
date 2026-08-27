@@ -263,7 +263,8 @@ class Center():
     def append_all_fun(self):
         for type_ in self._control_center.keys():
             for virtual_sensor in self._control_center[type_][0]:
-                    self.all_sensors_fun.append(*virtual_sensor.all_set_fun)
+                    for fun in virtual_sensor.all_set_fun:
+                        self.all_sensors_fun.append(fun)
                 
 
     def _remove_sensors(self):
