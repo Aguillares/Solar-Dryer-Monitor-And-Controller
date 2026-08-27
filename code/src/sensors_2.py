@@ -429,7 +429,7 @@ class Center():
         for type_ in self._connected_sensors: 
             for virtual_sensor in self._control_center[type_][0]:
                 properties = virtual_sensor.all_properties_values.keys()
-                prop = properties[0]
+                prop = list(properties[0])
                 # If one average value doesn't work, none of the others work. They are not useful.
                 normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self._minimum_sample
                 # We need to check for each 
@@ -573,7 +573,7 @@ class T_RH_Sensor(Sensor):
                 The current temperature (default None)
             """
 
-            self.all_properties_values['T']=self.sensor.temperature
+            self.all_properties_values['T']=round(self.sensor.temperature,2)
             self.avg_prop['T'].append(self.all_properties_values['T'])
             await asyncio.sleep(1)
             
@@ -587,7 +587,7 @@ class T_RH_Sensor(Sensor):
             value : float, optional
                 The current relative humidity (default None)
         """
-        self.all_properties_values['RH'] = self.sensor.relative_humidity
+        self.all_properties_values['RH'] = round(self.sensor.relative_humidity,2)
         self.avg_prop['RH'].append(self.all_properties_values['RH'])
         await asyncio.sleep(1)
 
@@ -626,7 +626,7 @@ class BME280(T_RH_Sensor):
         value : float, optional
             The current relative humidity (default None)
         """
-        self.all_properties_values['P'] = self.sensor.pressure
+        self.all_properties_values['P'] = round(self.sensor.pressure,2)
         self.avg_prop['P'].append(self.all_properties_values['P'])
         await asyncio.sleep(1)
 
