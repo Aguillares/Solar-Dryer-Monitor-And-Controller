@@ -55,6 +55,8 @@ class Center():
         # there are any sensors connected.
         self._attempt_init = 1
 
+        self.all_sensors = []
+
     def init(self):
         """
         It shows the initial message.
@@ -153,7 +155,8 @@ class Center():
                 if  self.trigger_bool or self.average_bool or first:
                     first = False
                     self.start_time_trigger = self.current_time
-                    asyncio.run(self._triggering_averaging())
+                    asyncio.run(self.trigger())
+                    # asyncio.run(self._triggering_averaging())
                     self.print_values('Trigger_'+str(self.trigger_number+1))
                     self.trigger_number = self.trigger_number + 1
                     # The minimum amount to be sure that it is representative.
@@ -253,6 +256,13 @@ class Center():
 
         # We want to get rid of all addresses that are not sensors.
         self._remove_sensors()
+        
+
+
+    def get_all_sensors(self):
+        for type_ in self._control_center.keys():
+            for virtual_sensor in self._control_center[type_][0]:
+                self.all_sensors.append(virtual_sensor)
 
     def _remove_sensors(self):
         """Removes the sensors that are not connected"""
@@ -364,32 +374,52 @@ class Center():
     async def _triggering_averaging(self):
         """Calls the trigger function of all connected sensors 
         and adds data that is going to be averaged"""
+        pass
         # Maybe here we can add a clock to see the differences between sensors' time.
-        for type_ in self._connected_sensors:
-            for virtual_sensor in self._control_center[type_][0]:
+        
+        # try:
+        #     self.avg_exception = False
+        #     await virtual_sensor.trigger()
+        #     time.sleep(0.1)
+        #     self._add_avg_data(virtual_sensor)
+        # except SensorDataError:
+        #     self.avg_exception = True
+        #     print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
+        #     self._add_avg_data(virtual_sensor)
+        #     continue
 
-                try:
-                    self.avg_exception = False
-                    await virtual_sensor.trigger()
-                    time.sleep(0.1)
-                    self._add_avg_data(virtual_sensor)
-                except SensorDataError:
-                    self.avg_exception = True
-                    print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
-                    self._add_avg_data(virtual_sensor)
-                    continue
+
+    async def trigger(self):
+        """Triggers all the sensors"""
+        print("Data is being taken it...\n")
+        start = time.perf_counter()
+        for sensor in self.all_sensors:
+            all_sensors_fun = [set_fun for set_fun in sensor.all_set_fun]
+        await asyncio.gather(*[set_fun() for set_fun in all_sensors_fun])
+        
+            # except RuntimeError as e:
+            #     print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
+
+        print(f"\nElapsed time = {time.perf_counter()-start}\n")
+        # It detects if there are 'nan' values in the array.
+        # if (np.isnan(list(self.all_properties_values.values())).any()):
+        #     if self.attempts_trigger == 10:
+        #         self.set_all(np.nan)
+        #         raise SensorDataError
+                
+            
 
     #  Model 
     def _add_avg_data(self, virtual_sensor):
         """Adds the data that is going to be averaged
         """
         # This "i" is just for the detection of the properties' name
-
-        for property, value in virtual_sensor.all_properties_values.items():
-            # Now we want to know the property name according to the "sensor_property_value"
-            if self.avg_exception:
-                value = np.nan
-            virtual_sensor.avg_prop[property].append(value)
+        # for property, value in virtual_sensor.all_properties_values.items():
+        #     # Now we want to know the property name according to the "sensor_property_value"
+        #     if self.avg_exception:
+        #         value = np.nan
+        #     virtual_sensor.avg_prop[property].append(value)
+        pass
 
     # Model
     def _set_avg_prop(self):
@@ -504,30 +534,6 @@ class Sensor():
         for set_fun in self.all_set_fun:
             set_fun(value)
 
-    async def trigger(self):
-        """Triggers all the sensors"""
-        
-        print("Data is being taken it...\n")
-        start = time.perf_counter()
-
-        results = await asyncio.gather(*[set_fun() for set_fun in self.all_set_fun])
-        for value,property in zip(results,self.all_properties_values.keys()):
-            try:
-            # We are going to round it to two places
-                self.all_properties_values[property]=float(round(value,2))
-            except RuntimeError as e:
-                print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
-
-        print(f"\nElapsed time = {time.perf_counter()-start}\n")
-        # It detects if there are 'nan' values in the array.
-        if (np.isnan(list(self.all_properties_values.values())).any()):
-            if self.attempts_trigger == 10:
-                self.set_all(np.nan)
-                raise SensorDataError
-                
-            self.attempts_trigger = self.attempts_trigger+1
-            await self.trigger()
-
 
 class T_RH_Sensor(Sensor):
     """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
@@ -564,14 +570,10 @@ class T_RH_Sensor(Sensor):
             value : float, optional
                 The current temperature (default None)
             """
-            if value is None:
-                temp = self.sensor.temperature
-            else:
-                temp = value
 
+            self.all_properties_values['T']=self.sensor.temperature
+            self.avg_prop['T'].append(self.all_properties_values['T'])
             await asyncio.sleep(1)
-            return temp
-            
             
     async def set_RH(self,value = None):
         """Sets the relative humidity whether 'value' is given
@@ -583,14 +585,9 @@ class T_RH_Sensor(Sensor):
             value : float, optional
                 The current relative humidity (default None)
         """
-        if value is None:
-            humidity = self.sensor.relative_humidity
-        else:
-            humidity = value
-
+        self.all_properties_values['RH'] = self.sensor.relative_humidity
+        self.avg_prop['RH'].append(self.all_properties_values['RH'])
         await asyncio.sleep(1)
-
-        return humidity
 
 class BME280(T_RH_Sensor):
     """Sensor BME280 detects Temperature, Relative Humidity and Pressure"""
@@ -627,14 +624,9 @@ class BME280(T_RH_Sensor):
         value : float, optional
             The current relative humidity (default None)
         """
-        if value is None:
-            pressure = self.sensor.pressure
-        else:
-            pressure = value
-
+        self.all_properties_values['P'] = self.sensor.pressure
+        self.avg_prop['P'].append(self.all_properties_values['P'])
         await asyncio.sleep(1)
-
-        return pressure
 
 class SHT31(T_RH_Sensor):
     def __init__(self,tca:tca9548a,port:int,number:int,address:int):
