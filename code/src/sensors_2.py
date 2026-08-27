@@ -55,7 +55,7 @@ class Center():
         # there are any sensors connected.
         self._attempt_init = 1
 
-        self.all_sensors = []
+        self.all_sensors_fun = []
 
     def init(self):
         """
@@ -256,13 +256,15 @@ class Center():
 
         # We want to get rid of all addresses that are not sensors.
         self._remove_sensors()
+        self.append_all_fun()
         
 
 
-    def get_all_sensors(self):
+    def append_all_fun(self):
         for type_ in self._control_center.keys():
             for virtual_sensor in self._control_center[type_][0]:
-                self.all_sensors.append(virtual_sensor)
+                    self.all_sensors_fun.append(*virtual_sensor.all_set_fun)
+                
 
     def _remove_sensors(self):
         """Removes the sensors that are not connected"""
@@ -393,9 +395,8 @@ class Center():
         """Triggers all the sensors"""
         print("Data is being taken it...\n")
         start = time.perf_counter()
-        for sensor in self.all_sensors:
-            all_sensors_fun = [set_fun for set_fun in sensor.all_set_fun]
-        await asyncio.gather(*[set_fun() for set_fun in all_sensors_fun])
+        
+        await asyncio.gather(*self.all_sensors_fun)
         
             # except RuntimeError as e:
             #     print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
