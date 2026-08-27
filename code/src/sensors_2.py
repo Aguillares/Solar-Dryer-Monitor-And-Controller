@@ -429,9 +429,8 @@ class Center():
         for type_ in self._connected_sensors: 
             for virtual_sensor in self._control_center[type_][0]:
                 properties = virtual_sensor.all_properties_values.keys()
-                prop = list(properties[0])
                 # If one average value doesn't work, none of the others work. They are not useful.
-                normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[prop])))>= self._minimum_sample
+                normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[list(properties)[0]])))>= self._minimum_sample
                 # We need to check for each 
                 for property in properties:
                     # To save the last sensors reading.
