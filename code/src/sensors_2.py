@@ -397,7 +397,7 @@ class Center():
         print("Data is being taken it...\n")
         start = time.perf_counter()
         
-        await asyncio.gather(*self.all_sensors_fun)
+        await asyncio.gather(*[fun() for fun in self.all_sensors_fun])
         
             # except RuntimeError as e:
             #     print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
