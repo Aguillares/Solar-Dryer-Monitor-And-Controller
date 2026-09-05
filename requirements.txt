@@ -1,0 +1,11 @@
+adafruit_ads1x15==1.0.2
+adafruit_bme280==1.0.1
+board==1.0
+gpiozero==2.0.1
+hx711==1.0.0
+matplotlib==3.11.0
+my_utils==0.0.1
+numpy==2.5.0
+Pillow==12.2.0
+smbus2==0.6.1
+ttkbootstrap==1.10.1
