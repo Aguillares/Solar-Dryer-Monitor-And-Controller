@@ -260,7 +260,6 @@ class SensorsController():
         """Removes the sensors that are not connected"""
         type_obj=list(self._control_center.items())
         for type_, obj_addr in type_obj:
-            print(obj_addr)
             total_num = len(obj_addr[1])
             if total_num > 0:
                 print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
@@ -334,7 +333,7 @@ class SensorsController():
         # All the sensors listed under, they EXIST.
         header = ''
         # All connected sensors are considered to make the header.
-        for type_ in self._connected_sensors:
+        for type_ in self._control_center.keys():
             for virtual_sensor in self._control_center[type_][0]:
                 for property in virtual_sensor.all_properties_values.keys():
                     header = header+',' + virtual_sensor.name+'_'+property
