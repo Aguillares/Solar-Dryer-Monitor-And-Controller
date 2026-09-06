@@ -258,7 +258,7 @@ class SensorsController():
 
     def _remove_sensors(self):
         """Removes the sensors that are not connected"""
-        type_obj=self._control_center.items()
+        type_obj=str(self._control_center.items())
         for type_, obj_addr in type_obj:
             total_num = len(obj_addr[1])
             if total_num > 0:
