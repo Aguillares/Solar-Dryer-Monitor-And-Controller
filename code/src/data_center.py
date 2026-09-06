@@ -258,8 +258,8 @@ class SensorsController():
 
     def _remove_sensors(self):
         """Removes the sensors that are not connected"""
-
-        for type_, obj_addr in self._control_center.items():
+        type_obj=self._control_center.items()
+        for type_, obj_addr in type_obj:
             total_num = len(obj_addr[1])
             if total_num > 0:
                 print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
@@ -272,7 +272,7 @@ class SensorsController():
                     
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array.
-                print(f"Before   {self._control_center} \n")
+                print(f"Before     {self._control_center} \n")
                 del self._control_center[type_]
                 # del self._connected_sensors[self._connçected_sensors.index(type_)]
                 print(f"After   {self._control_center}")
