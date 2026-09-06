@@ -375,6 +375,7 @@ class SensorsController():
     def _join_fun(self):
         """Joins all results in a big array"""
         self.results_avg = []
+        print(f"Inside _join_fun {self._control_center.keys() =}")
         for connected_sensor in self._control_center.keys():
             for virtual_sensor in self._control_center[connected_sensor][0]:
                 for value in virtual_sensor.avg_prop.values():
@@ -386,9 +387,11 @@ class SensorsController():
 class SensorsView():
     def __init__(self,sensor_controller):
         self.sensor_controller = sensor_controller 
+        self.keys=self.sensor_controller._control_center.keys()
+        print(f"The keys are {self.keys}")
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self.sensor_controller._control_center.keys():
+        for connected_sensor in self.keys:
             properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
