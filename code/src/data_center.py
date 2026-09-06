@@ -19,7 +19,7 @@ from collections.abc import Callable
 
 from sensors import *
 
-class Center():
+class SensorsController():
     """
     It watches constantly the data sent by the sensors, and it is stored peridiocally
 
@@ -36,8 +36,11 @@ class Center():
         Saves the data given by the sensors
     """
     def __init__(self):
+        # Sensor view class.
+        self.sensors_view = SensorsView(self)
         # These can be any type of sensors.
         self._connected_sensors = ['BME280','SHT31','MLX90614']
+       
         # You need to change your initial path
         self._init_path = r'init_path.txt'
         # It is used for scanning a channel to see if 
@@ -146,7 +149,7 @@ class Center():
                     self.start_time_trigger = self.current_time
                     asyncio.run(self.trigger())
                     # asyncio.run(self._triggering_averaging())
-                    self.print_values('Trigger_'+str(self.trigger_number+1))
+                    self.sensors_view.print_values('Trigger_'+str(self.trigger_number+1))
                     self.trigger_number = self.trigger_number + 1
                     # The minimum amount to be sure that it is representative.
                     if self.average_bool:
@@ -155,7 +158,7 @@ class Center():
                         self._set_avg_prop() # We are going to round it to ()
                         # Convert `average_5min` to a string format suitable for CSV, handling NaN values properly
                         self._join_fun()
-                        self.print_values('Average')
+                        self.sensors_view.print_values('Average')
                         
                         # It is splited [Day Name, Month, Day Number, Hour, Year]
                         self.full_time = time.ctime(self.start_time_average).split()
@@ -340,43 +343,6 @@ class Center():
         print("Cleaning...")
         print("Bye!")
         os._exit(1)
-#         sys.exit()
-
-    def print_values(self,data_type):
-                
-        print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self._connected_sensors:
-            properties = self._control_center[connected_sensor][0][0].all_properties_values.keys()
-            for property in properties:
-                values = []
-                print(f"{connected_sensor+'_'+property}: ",end='')
-                virtual_sensors= self._control_center[connected_sensor][0]
-                for virtual_sensor in virtual_sensors:
-                    values.append(float(virtual_sensor.avg_prop[property][self.trigger_number]))
-                    if data_type == 'Average':
-                        virtual_sensor.avg_prop[property] = []
-                
-                print(f"{str(values)[1:-1]}",end=' ')
-            print() # To print the other sensors' data, one "\n"
-        print(f"----------------{data_type}------------------------\n")
-
-    async def _triggering_averaging(self):
-        """Calls the trigger function of all connected sensors 
-        and adds data that is going to be averaged"""
-        pass
-        # Maybe here we can add a clock to see the differences between sensors' time.
-        
-        # try:
-        #     self.avg_exception = False
-        #     await virtual_sensor.trigger()
-        #     time.sleep(0.1)
-        #     self._add_avg_data(virtual_sensor)
-        # except SensorDataError:
-        #     self.avg_exception = True
-        #     print("There's a problem with the sensor: {} ".format(virtual_sensor.name))
-        #     self._add_avg_data(virtual_sensor)
-        #     continue
-
 
     async def trigger(self):
         """Triggers all the sensors"""
@@ -384,32 +350,9 @@ class Center():
         start = time.perf_counter()
         
         await asyncio.gather(*[fun() for fun in self.all_sensors_fun])
-        
-            # except RuntimeError as e:
-            #     print(f"Error, probable reasons: \n 1. Suddenly two sensors have the same address. \n {e}")
 
-        print(f"\nElapsed time = {time.perf_counter()-start}\n")
-        # It detects if there are 'nan' values in the array.
-        # if (np.isnan(list(self.all_properties_values.values())).any()):
-        #     if self.attempts_trigger == 10:
-        #         self.set_all(np.nan)
-        #         raise SensorDataError
-                
-            
+        print(f"\nElapsed time = {time.perf_counter()-start}\n")            
 
-    #  Model 
-    def _add_avg_data(self, virtual_sensor):
-        """Adds the data that is going to be averaged
-        """
-        # This "i" is just for the detection of the properties' name
-        # for property, value in virtual_sensor.all_properties_values.items():
-        #     # Now we want to know the property name according to the "sensor_property_value"
-        #     if self.avg_exception:
-        #         value = np.nan
-        #     virtual_sensor.avg_prop[property].append(value)
-        pass
-
-    # Model
     def _set_avg_prop(self):
         # The property self._connected_sensors can be eliminated
         for type_ in self._connected_sensors: 
@@ -430,20 +373,33 @@ class Center():
     def _join_fun(self):
         """Joins all results in a big array"""
         self.results_avg = []
-        i=0
         for connected_sensor in self._connected_sensors:
             for virtual_sensor in self._control_center[connected_sensor][0]:
                 for value in virtual_sensor.avg_prop.values():
                     # The array has just one value
                     self.results_avg.append(float(value[0]))
-                    i = i +1
-                    if connected_sensor == 'SHT31' and i == 1 and value>=75:
-                        virtual_sensor.set_heater(True)
-                        time.sleep(0.8)
-                        virtual_sensor.set_heater(False)
                         
         self.results_avg = str(self.results_avg)
 
+class SensorsView():
+    def __init__(self,sensor_controller):
+        self.sensor_controller = sensor_controller 
+    def print_values(self,data_type):
+        print(f"---------------{data_type}-------------------------")
+        for connected_sensor in self.sensor_controller._connected_sensors:
+            properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
+            for property in properties:
+                values = []
+                print(f"{connected_sensor+'_'+property}: ",end='')
+                virtual_sensors= self.sensor_controller._control_center[connected_sensor][0]
+                for virtual_sensor in virtual_sensors:
+                    values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
+                    if data_type == 'Average':
+                        virtual_sensor.avg_prop[property] = []
+                
+                print(f"{str(values)[1:-1]}",end=' ')
+            print() # To print the other sensors' data, one "\n"
+        print(f"----------------{data_type}------------------------\n")
 
 class FileManager(object):
     
@@ -491,13 +447,7 @@ class AddInfo(FileManager):
 if __name__ == "__main__":
     try:
         # Reset the sensors power.
-        GPIO.setup(23,GPIO.OUT)
-        GPIO.output(23,False)
-        time.sleep(0.1)
-        GPIO.output(23,True)
-        dog_watcher = Center()
-        #dog_watcher.init()
-   
+        dog_watcher = SensorsController()
         dog_watcher.setup()
         dog_watcher.save_data()
             
