@@ -260,6 +260,7 @@ class SensorsController():
         """Removes the sensors that are not connected"""
         type_obj=list(self._control_center.items())
         for type_, obj_addr in type_obj:
+            print(obj_addr)
             total_num = len(obj_addr[1])
             if total_num > 0:
                 print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
@@ -272,10 +273,8 @@ class SensorsController():
                     
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array.
-                print(f"Before     {self._control_center} \n")
                 del self._control_center[type_]
-                # del self._connected_sensors[self._connçected_sensors.index(type_)]
-                print(f"After   {self._control_center}")
+                
             time.sleep(1)
           
     def _file_detection(self,replica_number):
