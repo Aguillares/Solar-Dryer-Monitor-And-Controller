@@ -4,7 +4,7 @@ Created on Mon Sep  9 06:40:26 2024
 
 @author: perro
 """
-33333333333333333333333333333333333333333333333333333333333333333333333333333333333333333333
+
 import re
 import time
 import board
@@ -387,9 +387,10 @@ class SensorsController():
 class SensorsView():
     def __init__(self,sensor_controller):
         self.sensor_controller = sensor_controller 
+        
+    def print_values(self,data_type):
         self.keys=self.sensor_controller._control_center.keys()
         print(f"The keys are {self.keys}")
-    def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
         for connected_sensor in self.keys:
             properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
