@@ -272,9 +272,10 @@ class SensorsController():
                     
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array.
+                print(f"Before   {self._control_center} \n")
                 del self._control_center[type_]
                 # del self._connected_sensors[self._connçected_sensors.index(type_)]
-            
+                print(f"After   {self._control_center}")
             time.sleep(1)
           
     def _file_detection(self,replica_number):
