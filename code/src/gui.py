@@ -156,9 +156,9 @@ class Monitor(ttk.Window):
         self.mainloop()
     
     def _fill_data(self)->None:
-        """
-        Function to fill data into the dictionary 
-        the different variables are:
+        """fills data into the dictionary 
+        
+        The different variables are:
         
         _T: Temperature
         
@@ -178,7 +178,7 @@ class Monitor(ttk.Window):
             
             
     def _detection(self,var_type:str,header_var:str,col:int)->None:
-        """We assign all values according to their variable type
+        """assigns all values according to their variable type
         
         Parameters:
             var_type (str): The variable type, could be pressure (_P), relative humidity (_RH) or temperature (_T)
