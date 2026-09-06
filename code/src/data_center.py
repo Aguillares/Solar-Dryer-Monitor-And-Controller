@@ -85,7 +85,8 @@ class SensorsController():
         
         # We need to check how many types of sensors are connected,
         # if none, we must try it again 
-        if len(self._connected_sensors) == 0:
+        if len(self._control_center.keys()) == 0:
+            
             self._connected_sensors = ['BME280','SHT31','MLX90614']
             self._attempt_init += self._attempt_init
             print("There are no sensors connected")
@@ -356,7 +357,7 @@ class SensorsController():
 
     def _set_avg_prop(self):
         # The property self._connected_sensors can be eliminated
-        for type_ in self._connected_sensors: 
+        for type_ in self._control_center.keys(): 
             for virtual_sensor in self._control_center[type_][0]:
                 properties = virtual_sensor.all_properties_values.keys()
                 # If one average value doesn't work, none of the others work. They are not useful.
@@ -374,7 +375,7 @@ class SensorsController():
     def _join_fun(self):
         """Joins all results in a big array"""
         self.results_avg = []
-        for connected_sensor in self._connected_sensors:
+        for connected_sensor in self._control_center.keys():
             for virtual_sensor in self._control_center[connected_sensor][0]:
                 for value in virtual_sensor.avg_prop.values():
                     # The array has just one value
@@ -387,7 +388,7 @@ class SensorsView():
         self.sensor_controller = sensor_controller 
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self.sensor_controller._connected_sensors:
+        for connected_sensor in self.sensor_controller._control_center.keys():
             properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
