@@ -379,17 +379,17 @@ class SensorsController():
         self.results_avg = str(self.results_avg)
 
 class SensorsView():
-    def __init__(self,sensor_controller):
+    def __init__(self,sensor_controller:SensorsController):
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
         print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self.sensor_controller._control_center.keys():
-            properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
+        for connected_sensor in self.sensor_controller.tca9548a._control_center.keys():
+            properties = self.sensor_controller.tca9548a._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
                 print(f"{connected_sensor+'_'+property}: ",end='')
-                virtual_sensors = self.sensor_controller._control_center[connected_sensor][0]
+                virtual_sensors = self.sensor_controller.tca9548a._control_center[connected_sensor][0]
                 for virtual_sensor in virtual_sensors:
                     values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
                     if data_type == 'Average':
