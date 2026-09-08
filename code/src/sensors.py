@@ -75,6 +75,11 @@ class Sensor():
         for set_fun in self.all_set_fun:
             set_fun(value)
 
+    async def trigger_all_set_fun(self):
+        """triggers all set functions of the sensor"""
+        for set_fun in self.all_set_fun:
+            set_fun()
+
 class T_RH_Sensor(Sensor):
     """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
         supports temperature and relative humidity."""
@@ -100,22 +105,22 @@ class T_RH_Sensor(Sensor):
             'RH' : [],
         }
 
-    async def set_T (self,value = None):
-            """Sets the temperature whether 'value' is given
-            
-            If the argument value is not given, the sensor takes data.
+    def set_T (self,value = None):
+        """Sets the temperature whether 'value' is given
+        
+        If the argument value is not given, the sensor takes data.
 
-            Parameter 
-            ---------
-            value : float, optional
-                The current temperature (default None)
-            """
+        Parameter 
+        ---------
+        value : float, optional
+            The current temperature (default None)
+        """
 
-            self.all_properties_values['T']=round(self.sensor.temperature,2)
-            self.avg_prop['T'].append(self.all_properties_values['T'])
-            await asyncio.sleep(1)
+        self.all_properties_values['T']=round(self.sensor.temperature,2)
+        self.avg_prop['T'].append(self.all_properties_values['T'])
+        
             
-    async def set_RH(self,value = None):
+    def set_RH(self,value = None):
         """Sets the relative humidity whether 'value' is given
                     
             If the argument value is not given, the sensor takes data.
@@ -127,7 +132,7 @@ class T_RH_Sensor(Sensor):
         """
         self.all_properties_values['RH'] = round(self.sensor.relative_humidity,2)
         self.avg_prop['RH'].append(self.all_properties_values['RH'])
-        await asyncio.sleep(1)
+        
 
 class BME280(T_RH_Sensor):
     """Sensor BME280 detects Temperature, Relative Humidity and Pressure"""
@@ -154,7 +159,7 @@ class BME280(T_RH_Sensor):
             'P':0}
         self.all_set_fun=[self.set_T,self.set_RH,self.set_P]
 
-    async def set_P(self,value=None):
+    def set_P(self,value=None):
         """Retrieves pressure 
 
         If the argument value is not given, the sensor takes data.
@@ -166,7 +171,7 @@ class BME280(T_RH_Sensor):
         """
         self.all_properties_values['P'] = round(self.sensor.pressure,2)
         self.avg_prop['P'].append(self.all_properties_values['P'])
-        await asyncio.sleep(1)
+        
 
 class SHT31(T_RH_Sensor):
     def __init__(self,tca:tca9548a,port:int,number:int,address:int):
@@ -174,7 +179,7 @@ class SHT31(T_RH_Sensor):
         self.all_properties_values={'T':0,'RH':0}
         self.all_set_fun=[self.set_T,self.set_RH]
 
-    async def set_heater(self,heater_command):
+    def set_heater(self,heater_command):
         self.sensor.heater = heater_command
 
 class MLX90614(Sensor):
