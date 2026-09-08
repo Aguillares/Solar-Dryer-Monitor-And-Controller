@@ -391,7 +391,8 @@ class SensorsView():
                 print(f"{connected_sensor+'_'+property}: ",end='')
                 virtual_sensors = self.sensor_controller.tca9548a._control_center[connected_sensor][0]
                 for virtual_sensor in virtual_sensors:
-                    values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
+                    print(virtual_sensor.avg_prop[property])
+                    # values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
                 
