@@ -346,7 +346,7 @@ class SensorsController():
         print("Data is being taken it...\n")
         start = time.perf_counter()
         
-        await asyncio.gather(*[fun() for fun in self.all_sensors_fun])
+        await asyncio.gather(*[fun() for fun in self.tca9548a.all_sensors_fun])
 
         print(f"\nElapsed time = {time.perf_counter()-start}\n")            
 
