@@ -489,7 +489,7 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
         """Removes the sensors that are not connected"""
         type_obj=list(self._control_center.items())
         for type_, obj_addr in type_obj:
-            total_num = len(obj_addr[1])
+            total_num = len(obj_addr[0])
             if total_num > 0:
                 print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
                 for curr_num, addr in enumerate(obj_addr[1]):
