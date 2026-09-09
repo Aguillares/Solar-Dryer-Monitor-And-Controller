@@ -243,6 +243,9 @@ class SensorsController():
                     print(f"Aborting, there are torn wires or desconected, (check power wires) ")
                     time.sleep(2)
                     self.cleanAndExit()
+            # Deleting the addresses
+            for sensor_name in self._control_center.keys():
+                self._control_center[sensor_name][1] = []
 
         # We want to get rid of all addresses that are not sensors.
         self._remove_sensors()
