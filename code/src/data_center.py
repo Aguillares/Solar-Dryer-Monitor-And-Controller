@@ -38,9 +38,6 @@ class SensorsController():
     def __init__(self):
         # Sensor view class.
         self.sensors_view = SensorsView(self)
-        # These can be any type of sensors.
-        self._connected_sensors = ['BME280','SHT31','MLX90614']
-       
         # You need to change your initial path
         self._init_path = r'init_path.txt'
         # It is used for scanning a channel to see if 
@@ -71,7 +68,9 @@ class SensorsController():
         and whether apparently we don't see any of them, we are going to 
         try 4 times more"""
         # Scanning the channels.
-        self._scanner()
+        # self._scanner()
+        self.tca9548a = TCA9548A()
+        self.tca9548a.scanner()
 
         # Until the 5th try everything collapses, and the program is shut down
         if self._attempt_init == 5:
@@ -85,7 +84,7 @@ class SensorsController():
         
         # We need to check how many types of sensors are connected,
         # if none, we must try it again 
-        if len(self._control_center.keys()) == 0:
+        if len(self.tca9548a._control_center.keys()) == 0:
             
             self._connected_sensors = ['BME280','SHT31','MLX90614']
             self._attempt_init += self._attempt_init
@@ -149,7 +148,7 @@ class SensorsController():
                     first = False
                     self.start_time_trigger = self.current_time
                     asyncio.run(self.trigger())
-                    # asyncio.run(self._triggering_averaging())
+                    
                     self.sensors_view.print_values('Trigger_'+str(self.trigger_number+1))
                     self.trigger_number = self.trigger_number + 1
                     # The minimum amount to be sure that it is representative.
@@ -163,9 +162,7 @@ class SensorsController():
                         
                         # It is splited [Day Name, Month, Day Number, Hour, Year]
                         self.full_time = time.ctime(self.start_time_average).split()
-                        
                         print(f"Captured Date ={self.full_time[0]} {self.full_time[2]} {self.full_time[1]} {self.full_time[4]}, Time = {self.full_time[3]}")
-            
                         xfile.write(f"{self.full_time[2]},{self.full_time[1]},{self.full_time[4]},{self.full_time[3]},{self.results_avg[1:-1]}\n")
                         print("\n---------------------------------")
                         print("Saving data in memory",end="")
@@ -274,8 +271,6 @@ class SensorsController():
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array.
                 del self._control_center[type_]
-                
-            time.sleep(1)
           
     def _file_detection(self,replica_number):
         """Detects whether there's already a file with the same file"""
@@ -334,8 +329,8 @@ class SensorsController():
         # All the sensors listed under, they EXIST.
         header = ''
         # All connected sensors are considered to make the header.
-        for type_ in self._control_center.keys():
-            for virtual_sensor in self._control_center[type_][0]:
+        for type_ in self.tca9548a._control_center.keys():
+            for virtual_sensor in self.tca9548a._control_center[type_][0]:
                 for property in virtual_sensor.all_properties_values.keys():
                     header = header+',' + virtual_sensor.name+'_'+property
                     
@@ -351,14 +346,14 @@ class SensorsController():
         print("Data is being taken it...\n")
         start = time.perf_counter()
         
-        await asyncio.gather(*[fun() for fun in self.all_sensors_fun])
+        await asyncio.gather(*[fun() for fun in self.tca9548a.all_sensors_fun])
 
         print(f"\nElapsed time = {time.perf_counter()-start}\n")            
 
     def _set_avg_prop(self):
         # The property self._connected_sensors can be eliminated
-        for type_ in self._control_center.keys(): 
-            for virtual_sensor in self._control_center[type_][0]:
+        for type_ in self.tca9548a._control_center.keys(): 
+            for virtual_sensor in self.tca9548a._control_center[type_][0]:
                 properties = virtual_sensor.all_properties_values.keys()
                 # If one average value doesn't work, none of the others work. They are not useful.
                 normal_op = np.nansum(np.invert(np.isnan(virtual_sensor.avg_prop[list(properties)[0]])))>= self._minimum_sample
@@ -375,9 +370,8 @@ class SensorsController():
     def _join_fun(self):
         """Joins all results in a big array"""
         self.results_avg = []
-        print(f"Inside _join_fun {self._control_center.keys() =}")
-        for connected_sensor in self._control_center.keys():
-            for virtual_sensor in self._control_center[connected_sensor][0]:
+        for connected_sensor in self.tca9548a._control_center.keys():
+            for virtual_sensor in self.tca9548a._control_center[connected_sensor][0]:
                 for value in virtual_sensor.avg_prop.values():
                     # The array has just one value
                     self.results_avg.append(float(value[0]))
@@ -385,19 +379,19 @@ class SensorsController():
         self.results_avg = str(self.results_avg)
 
 class SensorsView():
-    def __init__(self,sensor_controller):
+    def __init__(self,sensor_controller:SensorsController):
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
         self.keys=self.sensor_controller._control_center.keys()
         print(f"The keys are {self.keys}")
         print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self.keys:
-            properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
+        for connected_sensor in self.sensor_controller.tca9548a._control_center.keys():
+            properties = self.sensor_controller.tca9548a._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
                 print(f"{connected_sensor+'_'+property}: ",end='')
-                virtual_sensors = self.sensor_controller._control_center[connected_sensor][0]
+                virtual_sensors = self.sensor_controller.tca9548a._control_center[connected_sensor][0]
                 for virtual_sensor in virtual_sensors:
                     values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
                     if data_type == 'Average':
@@ -406,6 +400,112 @@ class SensorsView():
                 print(f"{str(values)}",end=' ')
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
+
+class TCA9548A(adafruit_tca9548a.TCA9548A):
+    def __init__(self):
+        # All sensors' functions
+        self.all_sensors_fun = []
+        self._i2c = board.I2C()
+        super().__init__(self._i2c)
+        # We initialize the dictionary "control_center" to save all data related to the sensors.
+        # First array: the objects themselves.
+        # Second array: the objects' addresses.     
+        self._control_center = {
+            "BME280" : [[],[]],
+            "MLX90614" : [[],[]],
+            "SHT31" : [[],[]]
+        }
+
+
+    def scanner(self):
+        """Detects all sensors in the multiplexor, transversing each channel
+        """
+        print("Sensors' Scanner", end='')
+        for _ in range(3):
+            print(".",end='')
+            time.sleep(0.25)
+        print("\n")
+        time.sleep(0.8)
+        # I2C setup on bus 1
+        # When it is invoked, an object of the corresponding class is created
+        sensor_types = {
+            "BME280" : BME280,
+            "SHT31" : SHT31,
+            "MLX90614" : MLX90614
+        }
+        # We have 8 ports in total
+        for port in range(8):
+            # We have to check if there are sensors connected in any channel, 3 times each.
+            # After one sensor is added with a particular address,
+            # no more sensors with the same address are going to be accepted, 
+            # because we are going to save two different physical sensors with the same address.
+        
+            for _ in range(3):
+                try:
+                    # Getting the addresses of the port.
+                    if self[port].try_lock():
+                        addresses = self[port].scan()
+                    
+                    #After it is scanned, we are going to unlock it, to let communication flow later.
+                    self[port].unlock()
+                    try:
+                        # We have different addresses according to the sensor.
+                        for address in addresses:
+                            # As we are using dictionaries, each address is mapped to its correponding sensor name.
+                            try:
+                                sensor_name = SENSORS_NAMES[address]
+                            except KeyError:
+                                # As this address doesn't match any of the sensors' names, we need to go to the next loop.
+                                continue
+
+                            # Whether we go in, it means the array doesn't have that specific address,
+                            # which says we need to add it.
+                            if not address in self._control_center[sensor_name][1]:
+                                self._control_center[sensor_name][0].append(sensor_types[sensor_name](self,
+                                                                port,
+                                                                len(self._control_center[sensor_name][1]),    
+                                                                address))
+                                self._control_center[sensor_name][1].append(address)
+                                    
+                    except ValueError:
+                        print(f"Error in Port: {port}, sensor : {SENSORS_NAMES[address]}, address : {address}")
+                        time.sleep(1)
+                except OSError:
+                    print(f"Aborting, there are torn wires or desconected, (check power wires) ")
+                    time.sleep(2)
+                    self.cleanAndExit()
+
+        # We want to get rid of all addresses that are not sensors.
+        self._remove_sensors()
+        self._append_all_fun()
+
+    def _remove_sensors(self):
+        """Removes the sensors that are not connected"""
+        type_obj=list(self._control_center.items())
+        for type_, obj_addr in type_obj:
+            total_num = len(obj_addr[1])
+            if total_num > 0:
+                print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
+                for curr_num, addr in enumerate(obj_addr[1]):
+                    print(addr,end='')
+                    if curr_num < total_num-1:
+                        print(end=', ')
+                    else:
+                        print()
+                    
+            else:
+                # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array.
+                del self._control_center[type_]
+
+    def _append_all_fun(self):
+        for type_ in self._control_center.keys():
+            for virtual_sensor in self._control_center[type_][0]:
+                self.all_sensors_fun.append(virtual_sensor.trigger_all_set_fun)
+
+    def cleanAndExit(self):
+        print("Cleaning...")
+        print("Bye!")
+        os._exit(1)
 
 class FileManager(object):
     
