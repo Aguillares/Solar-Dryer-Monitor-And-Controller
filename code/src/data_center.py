@@ -85,8 +85,6 @@ class SensorsController():
         # We need to check how many types of sensors are connected,
         # if none, we must try it again 
         if len(self.tca9548a._control_center.keys()) == 0:
-            
-            self._connected_sensors = ['BME280','SHT31','MLX90614']
             self._attempt_init += self._attempt_init
             print("There are no sensors connected")
             time.sleep(1)
@@ -479,6 +477,7 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
                     self.cleanAndExit()
 
             # Deleting the addresses
+            print(f"The {self._control_center = }")
             for sensor_name in self._control_center.keys():
                 self._control_center[sensor_name][1] = []
 
