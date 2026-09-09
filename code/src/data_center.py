@@ -251,8 +251,7 @@ class SensorsController():
     def append_all_fun(self):
         for type_ in self._control_center.keys():
             for virtual_sensor in self._control_center[type_][0]:
-                    for fun in virtual_sensor.all_set_fun:
-                        self.all_sensors_fun.append(fun)  
+                        self.all_sensors_fun.append(virtual_sensor.trigger_all_set_fun)  
 
     def _remove_sensors(self):
         """Removes the sensors that are not connected"""
