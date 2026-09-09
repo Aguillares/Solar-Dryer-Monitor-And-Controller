@@ -478,6 +478,10 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
                     time.sleep(2)
                     self.cleanAndExit()
 
+            # Deleting the addresses
+            for sensor_name in self._control_center.keys():
+                self._control_center[sensor_name][1] = []
+
         # We want to get rid of all addresses that are not sensors.
         self._remove_sensors()
         self._append_all_fun()
