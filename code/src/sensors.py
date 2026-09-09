@@ -5,6 +5,7 @@ from adafruit_sht31d import SHT31D as sht31d
 import adafruit_tca9548a
 import os
 import time
+import board
 # We need to simplify the notation
 from typing import TypeAlias
 from typing import TypeVar
