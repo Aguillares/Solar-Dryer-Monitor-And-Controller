@@ -398,7 +398,7 @@ class SensorsView():
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
                 
-                print(f"{str(values)}",end=' ')
+                print(f"{str(values)[1:-1]}",end=' ')
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
