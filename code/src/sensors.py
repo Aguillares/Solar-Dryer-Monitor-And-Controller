@@ -174,7 +174,8 @@ class BME280(T_RH_Sensor):
         
 
 class SHT31(T_RH_Sensor):
-    def __init__(self,tca:tca9548a,port:int,number:int,address:int)        super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
+    def __init__(self,tca:tca9548a,port:int,number:int,address:int):
+        super().__init__(sht31d(tca[port],address),'SHT31',port,number,address)
         self.all_properties_values={'T':0,'RH':0}
         self.all_set_fun=[self.set_T,self.set_RH]
 
