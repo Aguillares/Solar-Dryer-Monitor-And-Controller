@@ -389,8 +389,10 @@ class SensorsView():
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
+        self.keys=self.sensor_controller._control_center.keys()
+        print(f"The keys are {self.keys}")
         print(f"---------------{data_type}-------------------------")
-        for connected_sensor in self.sensor_controller._control_center.keys():
+        for connected_sensor in self.keys:
             properties = self.sensor_controller._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
@@ -401,7 +403,7 @@ class SensorsView():
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
                 
-                print(f"{str(values)[1:-1]}",end=' ')
+                print(f"{str(values)}",end=' ')
             print() # To print the other sensors' data, one "\n"
         print(f"----------------{data_type}------------------------\n")
 
