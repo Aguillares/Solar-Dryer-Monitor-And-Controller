@@ -385,7 +385,7 @@ class SensorsView():
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
-        self.keys=self.sensor_controller._control_center.keys()
+        self.keys=self.sensor_controller.tca9548a._control_center.keys()
         print(f"The keys are {self.keys}")
         print(f"---------------{data_type}-------------------------")
         for connected_sensor in self.sensor_controller.tca9548a._control_center.keys():
