@@ -235,6 +235,7 @@ class SensorsController():
                                                                 len(self._control_center[sensor_name][1]),    
                                                                 address))
                                 self._control_center[sensor_name][1].append(address)
+                                print(f"The {self._control_center = }")
                                     
                     except ValueError:
                         print(f"Error in Port: {port}, sensor : {SENSORS_NAMES[address]}, address : {address}")
