@@ -4,19 +4,15 @@ Created on Mon Sep  9 06:40:26 2024
 
 @author: perro
 """
-
 import re
 import time
-import board
 import RPi.GPIO as GPIO
 from hx711 import HX711
 import numpy as np
-from pathlib import Path
-from settings import SENSORS_NAMES
 import os
 import asyncio
 from collections.abc import Callable
-
+from file_manager import *
 from sensors import *
 
 class SensorsController():
@@ -68,7 +64,6 @@ class SensorsController():
         and whether apparently we don't see any of them, we are going to 
         try 4 times more"""
         # Scanning the channels.
-        # self._scanner()
         self.tca9548a = TCA9548A()
         self.tca9548a.scanner()
 
@@ -308,48 +303,6 @@ class SensorsView():
 
         print(message)
 
-class FileManager(object):
-    
-    _mode = ''
-    def __init__(self,file_path:str|Path):
-        self._file_path = file_path
-
-    def __enter__(self):
-         # The relative path to the database is in 'file'
-        self._file = open(self._file_path,self._mode)
-        return self._file
-    
-    def __exit__(self, exc_type,exc_value, exc_tb):
-        if self._file:
-            self._file.close()
-
-        if isinstance(exc_type,Exception): 
-            print(f" {exc_type = }")
-            print(f" {exc_value = }")
-            print(f" {exc_tb = }")
-
-
-class ReadFile(FileManager):
-    """It opens the file in reading and editing mode"""
-    _mode = 'r+'
-
-class DetectFile(FileManager):
-    """It helps to detect whether the file exists or not"""
-    _mode = 'x'
-    def __exit__(self, exc_type,exc_value, exc_tb):
-        if self._file:
-            self._file.close()
-
-        if isinstance(exc_type,Exception) and not isinstance(exc_type,FileExistsError): 
-            print(f" {exc_type = }")
-            print(f" {exc_value = }")
-            print(f" {exc_tb = }")
-    
-class OverWriteFile(FileManager):
-    _mode = 'w+'
-
-class AddInfo(FileManager):
-    _mode = 'a'
 
 if __name__ == "__main__":
     try:
