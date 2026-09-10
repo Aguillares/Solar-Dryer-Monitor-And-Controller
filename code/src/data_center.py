@@ -296,7 +296,6 @@ class SensorsView():
                         virtual_sensor.avg_prop[property] = []
 
                 message = message + f"{str(values)[1:-1]} "
-                print(f"{str(values)[1:-1]}",end=' ')
             message = f"{message}\n"
 
         total_num_hyphen = max([len(item) for item in message.split('\n')])-len(data_type)
@@ -305,7 +304,7 @@ class SensorsView():
             division = f"{'-'*(num_hyp)}{data_type}{'-'*(num_hyp)}"
         else :
             division = f"{'-'*(num_hyp)}{data_type}{'-'*(total_num_hyphen-num_hyp)}"
-        message = division + message + division
+        message = division+ '\n' + message + division
 
         print(message)
 
