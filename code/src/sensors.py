@@ -244,12 +244,15 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
             "MLX90614" : MLX90614
         }
         # We have 8 ports in total
-        for port in range(8):
+        for port in range(8):    
+            # Deleting the addresses
+            for sensor_name in self._control_center.keys():
+                self._control_center[sensor_name][1] = []
+
             # We have to check if there are sensors connected in any channel, 3 times each.
             # After one sensor is added with a particular address,
             # no more sensors with the same address are going to be accepted, 
             # because we are going to save two different physical sensors with the same address.
-        
             for _ in range(3):
                 try:
                     # Getting the addresses of the port.
@@ -284,10 +287,6 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
                     print(f"Aborting, there are torn wires or desconected, (check power wires) ")
                     time.sleep(2)
                     self.cleanAndExit()
-
-            # Deleting the addresses
-            for sensor_name in self._control_center.keys():
-                self._control_center[sensor_name][1] = []
 
         # We want to get rid of all addresses that are not sensors.
         self._remove_sensors()
