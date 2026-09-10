@@ -212,7 +212,6 @@ class SensorsController():
                     init_file.write(init_path)
 
             except FileExistsError:
-                print(self._data_dir)
                 self._file_detection(replica_number+1)
             
     def _create_header(self):

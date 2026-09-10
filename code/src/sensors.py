@@ -298,13 +298,7 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
         for type_, obj_addr in type_obj:
             total_num = len(obj_addr[0])
             if total_num > 0:
-                print(f"{total_num} " + type_ + ' connected. Addresses: ', end='')
-                for curr_num, addr in enumerate(obj_addr[1]):
-                    print(addr,end='')
-                    if curr_num < total_num-1:
-                        print(end=', ')
-                    else:
-                        print()
+                print(f"{total_num} {type_} connected. \n")
                     
             else:
                 # Removing the non connected sensors. Then, all the sensors' names that are in "self.sensors_name" array.
