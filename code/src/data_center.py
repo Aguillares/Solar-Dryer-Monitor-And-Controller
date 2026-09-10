@@ -283,12 +283,12 @@ class SensorsView():
         
     def print_values(self,data_type):
         self.keys=self.sensor_controller.tca9548a._control_center.keys()
-        
+        message =''
         for connected_sensor in self.sensor_controller.tca9548a._control_center.keys():
             properties = self.sensor_controller.tca9548a._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
-                message = f"{connected_sensor+'_'+property}: "
+                message = message+ f"{connected_sensor+'_'+property}: "
                 virtual_sensors = self.sensor_controller.tca9548a._control_center[connected_sensor][0]
                 for virtual_sensor in virtual_sensors:
                     values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
