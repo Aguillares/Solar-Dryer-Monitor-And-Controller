@@ -286,7 +286,6 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
                     self.cleanAndExit()
 
             # Deleting the addresses
-            print(f"The {self._control_center = }")
             for sensor_name in self._control_center.keys():
                 self._control_center[sensor_name][1] = []
 
