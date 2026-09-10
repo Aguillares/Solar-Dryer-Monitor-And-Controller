@@ -283,22 +283,31 @@ class SensorsView():
         
     def print_values(self,data_type):
         self.keys=self.sensor_controller.tca9548a._control_center.keys()
-        print(f"The keys are {self.keys}")
-        print(f"---------------{data_type}-------------------------")
+        
         for connected_sensor in self.sensor_controller.tca9548a._control_center.keys():
             properties = self.sensor_controller.tca9548a._control_center[connected_sensor][0][0].all_properties_values.keys()
             for property in properties:
                 values = []
-                print(f"{connected_sensor+'_'+property}: ",end='')
+                message = f"{connected_sensor+'_'+property}: "
                 virtual_sensors = self.sensor_controller.tca9548a._control_center[connected_sensor][0]
                 for virtual_sensor in virtual_sensors:
                     values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
                     if data_type == 'Average':
                         virtual_sensor.avg_prop[property] = []
-                
+
+                message = message + f"{str(values)[1:-1]} "
                 print(f"{str(values)[1:-1]}",end=' ')
-            print() # To print the other sensors' data, one "\n"
-        print(f"----------------{data_type}------------------------\n")
+            message = f"{message}\n"
+
+        total_num_hyphen = max([len(item) for item in message.split('\n')])-len(data_type)
+        num_hyp=total_num_hyphen//2
+        if total_num_hyphen%2==0:
+            division = f"{'-'*(num_hyp)}{data_type}{'-'*(num_hyp)}"
+        else :
+            division = f"{'-'*(num_hyp)}{data_type}{'-'*(total_num_hyphen-num_hyp)}"
+        message = division + message + division
+
+        print(message)
 
 class FileManager(object):
     
