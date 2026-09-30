@@ -7,9 +7,10 @@ i2c = board.I2C()
 # Creaing a instance of  ADS1115 ADC (16 bit) instance
 adc = ADS1115(i2c)
 adc.gain = 1
+
 channels = [None] *4
 for num in range(4):
-    channels[num] = exec(f"AnalogIn(adc,ads1x15.Pin.A{num})")
+    channels[num] = AnalogIn(adc,num)
 
 # Choose a gain of 1 for reading voltages from 0 to 4.09 V
 # Or pick a different gain to change the range of voltages that are read:
@@ -33,7 +34,8 @@ while True:
     values = [0]*4
     for i in range(4):
         # Read the specified ADC channel using the previously gain value
-        values[i] = channels[i].value
+        
+        values[i] = channels[i].voltage
 
-    print("| {0:>6} | {1:>6} | {2:>6} | {3:>6} |".format(*values))
+    print("| {0:>6.4} | {1:>6.4} | {2:>6.4} | {3:>6.4} |".format(*values))
     time.sleep(0.5)
