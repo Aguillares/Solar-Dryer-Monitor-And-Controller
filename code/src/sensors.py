@@ -83,6 +83,10 @@ class Sensor():
         for set_fun in self.all_set_fun:
             set_fun()
 
+class NTC:
+    def __init__(self):
+        
+
 class T_RH_Sensor(Sensor):
     """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
         supports temperature and relative humidity."""
