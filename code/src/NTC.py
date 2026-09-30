@@ -1,6 +1,6 @@
 import time
 import board
-import adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15 
+from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15 
 
 # Importing board
 i2c = board.I2C()
