@@ -239,6 +239,7 @@ class NTC(AnalogSensor):
     def __init__(self):
         super().__init__()
         self.temperature = 0
+        self.avg_prop = []
 
     def convert_data(self,bits:float):
         "gets the current temperature using the Steinhart-Hart model"
@@ -246,7 +247,8 @@ class NTC(AnalogSensor):
         logR2 = np.log(R2)
         T = (1/(self.A + self.B*logR2+self.C*logR2**3))
 
-        self.temperature = T - 273.15
+        self.temperature =round (T - 273.15,2)
+        self.avg_prop.append(self.temperature)
 
     def create_message(self):
         return f"NTC: {self.temperature:.2f}\n"

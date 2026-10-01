@@ -86,8 +86,8 @@ class SensorsController():
             return  # To finish before going next, just the original has to continue.
 
         # Analog part 
-        self.ntc_sensor=NTC()
-        self.ads1115 =  ADS1115_([self.ntc_sensor])
+        self.ntc3950=NTC()
+        self.ads1115 =  ADS1115_([self.ntc3950])
 
         self.analog_names = ['NTC3950']
         
@@ -285,6 +285,9 @@ class SensorsController():
                     elif normal_op:
                         # The axis is for making the mean for each row, not column.
                         virtual_sensor.avg_prop[property] = [float(round(np.nanmean(virtual_sensor.avg_prop[property]),2))]
+
+        if np.nansum(np.invert(np.isnan(self.ntc3950.avg_prop)))>= self._minimum_sample:
+            self.ntc3950.avg_prop = [float(round(np.nanmean(self.ntc3950.avg_prop)))]
                                          
     def _join_fun(self):
         """Joins all results in a big array"""
@@ -294,7 +297,7 @@ class SensorsController():
                 for value in virtual_sensor.avg_prop.values():
                     # The array has just one value
                     self.results_avg.append(float(value[0]))
-                        
+        self.results_avg.append(self.ntc3950.avg_prop[0])                
         self.results_avg = str(self.results_avg)
 
 class SensorsView():
@@ -302,7 +305,7 @@ class SensorsView():
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
-        message=self.sensor_controller.create_message(data_type)+self.sensor_controller.ntc_sensor.create_message()
+        message=self.sensor_controller.create_message(data_type)+self.sensor_controller.ntc3950.create_message()
         total_num_hyphen = max([len(item) for item in message.split('\n')])-len(data_type)
         num_hyp=total_num_hyphen//2
         if total_num_hyphen%2==0:
