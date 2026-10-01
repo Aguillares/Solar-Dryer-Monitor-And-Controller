@@ -4,6 +4,7 @@ from adafruit_bme280 import basic as adafruit_bme280
 from adafruit_sht31d import SHT31D as sht31d
 from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
 import adafruit_tca9548a
+import asyncio
 import numpy as np
 import os
 import time
@@ -257,14 +258,14 @@ class ADS1115_(ADS1115):
     def __init__(self, sensors):
         self.sensors = sensors
         self._i2c = board.I2C()
-        self.adc = super().__init__(self._i2c)
-        self.adc.gain = 1
+        super().__init__(self._i2c)
+        self.gain = 1
         self.no_sensors = len(self.sensors)
         for i,sensor in enumerate(self.sensors):
             i= i*2
             sensor.pins = (i, i+1)
             # To check if we can automate the part of choosing one pin or two
-            sensor.channel = AnalogIn(self.adc,sensor.pins[0],sensor.pins[1])
+            sensor.channel = AnalogIn(self,sensor.pins[0],sensor.pins[1])
 
     def trigger_readings(self):
         for sensor in self.sensors:
@@ -273,6 +274,10 @@ class ADS1115_(ADS1115):
     def trigger_values(self):
         for sensor in self.sensors:
             sensor.convert_data(sensor.reading)
+    
+    async def trigger(self):
+        self.trigger_readings()
+        self.trigger_values()
 
 class TCA9548A(adafruit_tca9548a.TCA9548A):
     def __init__(self):
@@ -380,12 +385,11 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
 
 if __name__ == "__main__":
     ntc = NTC()
-    ads=ADS1115_(ntc)
+    ads=ADS1115_([ntc])
     print("Reading ADS1X15 values, press Ctrl-C to quit...")
     print("| {:>6} |".format('NTC'))
     while True:
-        ads.trigger_readings()
-        ads.trigger_values()
+        asyncio.run(ads.trigger())
 
         print("| {:>6.4} |".format(ntc.temperature))
         time.sleep(0.25)

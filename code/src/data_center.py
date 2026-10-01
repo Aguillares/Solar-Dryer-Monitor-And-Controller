@@ -8,7 +8,6 @@ import re
 import time
 import RPi.GPIO as GPIO
 from hx711 import HX711
-import asyncio
 from collections.abc import Callable
 from file_manager import *
 from sensors import *
