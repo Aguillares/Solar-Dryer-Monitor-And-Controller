@@ -285,9 +285,10 @@ class SensorsController():
                     elif normal_op:
                         # The axis is for making the mean for each row, not column.
                         virtual_sensor.avg_prop[property] = [float(round(np.nanmean(virtual_sensor.avg_prop[property]),2))]
-
+        
         if np.nansum(np.invert(np.isnan(self.ntc3950.avg_prop)))>= self._minimum_sample:
-            self.ntc3950.avg_prop = [float(round(np.nanmean(self.ntc3950.avg_prop)))]
+            self.ntc3950.avg_prop = [float(round(np.nanmean(self.ntc3950.avg_prop),2))]
+            
                                          
     def _join_fun(self):
         """Joins all results in a big array"""
