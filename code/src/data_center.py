@@ -123,6 +123,25 @@ class SensorsController():
         if self._header != header:
             self._file_detection(1)
 
+    def create_message(self,data_type):
+        self.keys=self.tca9548a._control_center.keys()
+        message =''
+        for connected_sensor in self.tca9548a._control_center.keys():
+            properties = self.tca9548a._control_center[connected_sensor][0][0].all_properties_values.keys()
+            for property in properties:
+                values = []
+                message = message+ f"{connected_sensor+'_'+property}: "
+                virtual_sensors = self.tca9548a._control_center[connected_sensor][0]
+                for virtual_sensor in virtual_sensors:
+                    values.append(float(virtual_sensor.avg_prop[property][self.trigger_number]))
+                    if data_type == 'Average':
+                        virtual_sensor.avg_prop[property] = []
+
+                message = message + f"{str(values)[1:-1]} "
+            message = f"{message}\n"
+
+        return message
+        
     def save_data(self):
         """Saves the data given by the sensors with the correct format"""
         with open(self._data_dir,'a') as xfile:
@@ -283,22 +302,9 @@ class SensorsView():
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
-        self.keys=self.sensor_controller.tca9548a._control_center.keys()
+        message=self.sensor_controller.create_message
         message =''
-        for connected_sensor in self.sensor_controller.tca9548a._control_center.keys():
-            properties = self.sensor_controller.tca9548a._control_center[connected_sensor][0][0].all_properties_values.keys()
-            for property in properties:
-                values = []
-                message = message+ f"{connected_sensor+'_'+property}: "
-                virtual_sensors = self.sensor_controller.tca9548a._control_center[connected_sensor][0]
-                for virtual_sensor in virtual_sensors:
-                    values.append(float(virtual_sensor.avg_prop[property][self.sensor_controller.trigger_number]))
-                    if data_type == 'Average':
-                        virtual_sensor.avg_prop[property] = []
-
-                message = message + f"{str(values)[1:-1]} "
-            message = f"{message}\n"
-
+        
         total_num_hyphen = max([len(item) for item in message.split('\n')])-len(data_type)
         num_hyp=total_num_hyphen//2
         if total_num_hyphen%2==0:
