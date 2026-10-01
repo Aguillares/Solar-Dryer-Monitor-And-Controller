@@ -247,6 +247,9 @@ class NTC(AnalogSensor):
         T = (1/(self.A + self.B*logR2+self.C*logR2**3))
 
         self.temperature = T - 273.15
+
+    def create_message(self):
+        return f"NTC: {self.temperature} "
        
 class ADS1115_(ADS1115):
     """ ADC reader
