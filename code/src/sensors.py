@@ -249,7 +249,7 @@ class NTC(AnalogSensor):
         self.temperature = T - 273.15
 
     def create_message(self):
-        return f"NTC: {self.temperature:.2}\n"
+        return f"NTC: {self.temperature:.2f}\n"
        
 class ADS1115_(ADS1115):
     """ ADC reader
