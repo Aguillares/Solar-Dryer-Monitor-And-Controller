@@ -87,7 +87,7 @@ class SensorsController():
 
         # Analog part 
         self.ntc_sensor=NTC()
-        self.ads1115 =  ADS1115_(self.ntc_sensor)
+        self.ads1115 =  ADS1115_([self.ntc_sensor])
 
         self.analog_names = ['NTC3950']
         
@@ -244,8 +244,9 @@ class SensorsController():
         """Triggers all the sensors"""
         print("Data is being taken it...\n")
         start = time.perf_counter()
-        
-        await asyncio.gather(*[fun() for fun in self.tca9548a.all_sensors_fun])
+        all_funs=[fun() for fun in self.tca9548a.all_sensors_fun]
+        all_funs.append(self.ads1115.trigger())
+        await asyncio.gather(*all_funs)
 
         print(f"\nElapsed time = {time.perf_counter()-start}\n")            
 
