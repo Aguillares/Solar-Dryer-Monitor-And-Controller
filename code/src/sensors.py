@@ -250,8 +250,10 @@ class NTC(AnalogSensor):
         self.temperature =round (T - 273.15,2)
         self.avg_prop.append(self.temperature)
 
-    def create_message(self):
-        return f"NTC: {self.temperature:.2f}\n"
+    def create_message(self,data_type,trigger_number):
+        if data_type == 'Average':
+            self.avg_prop = []
+        return f"NTC: {self.avg_prop[trigger_number]:.2f}\n"
        
 class ADS1115_(ADS1115):
     """ ADC reader

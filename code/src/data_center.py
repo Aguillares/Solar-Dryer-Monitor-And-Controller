@@ -306,7 +306,7 @@ class SensorsView():
         self.sensor_controller = sensor_controller 
         
     def print_values(self,data_type):
-        message=self.sensor_controller.create_message(data_type)+self.sensor_controller.ntc3950.create_message()
+        message=self.sensor_controller.create_message(data_type)+self.sensor_controller.ntc3950.create_message(data_type,self.sensor_controller.trigger_number)
         total_num_hyphen = max([len(item) for item in message.split('\n')])-len(data_type)
         num_hyp=total_num_hyphen//2
         if total_num_hyphen%2==0:
