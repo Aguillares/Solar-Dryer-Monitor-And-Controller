@@ -41,7 +41,6 @@ C = 0.9757198585*10**-7
 # http://www.thinksrs.com/downloads/programs/therm%20calc/ntccalibrator/ntccalculator.html
 num_sensors = 1
 channels = [None] *num_sensors
-#for num in range(num_sensors):
 channels[0] = AnalogIn(adc,0,1)
 
 # Choose a gain of 1 for reading voltages from 0 to 4.09 V

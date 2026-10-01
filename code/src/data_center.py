@@ -8,8 +8,6 @@ import re
 import time
 import RPi.GPIO as GPIO
 from hx711 import HX711
-import numpy as np
-import os
 import asyncio
 from collections.abc import Callable
 from file_manager import *
@@ -87,6 +85,12 @@ class SensorsController():
             time.sleep(5)
             self.setup()
             return  # To finish before going next, just the original has to continue.
+
+        # Analog part 
+        self.ntc_sensor=NTC()
+        self.ads1115 =  ADS1115_(self.ntc_sensor)
+
+        self.analog_names = ['NTC3950']
         
         self.display_trigger = 5*1    # Each time is taken information.
         self.average_trigger = 0*60+ 3*5  # Up to this point, all data is averaged.
@@ -226,7 +230,10 @@ class SensorsController():
             for virtual_sensor in self.tca9548a._control_center[type_][0]:
                 for property in virtual_sensor.all_properties_values.keys():
                     header = header+',' + virtual_sensor.name+'_'+property
-                    
+
+        # All analog sensors
+        for name in self.analog_names:
+            header = header + ',' + name
         self._header = self._header+header 
         
     def cleanAndExit(self):

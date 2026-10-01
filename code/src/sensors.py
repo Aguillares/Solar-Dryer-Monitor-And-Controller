@@ -2,7 +2,9 @@ from settings import SENSORS_NAMES
 from adafruit_mlx90614 import MLX90614 as mlx90614
 from adafruit_bme280 import basic as adafruit_bme280
 from adafruit_sht31d import SHT31D as sht31d
+from adafruit_ads1x15 import ADS1115, AnalogIn, ads1x15
 import adafruit_tca9548a
+import numpy as np
 import os
 import time
 import board
@@ -83,9 +85,6 @@ class Sensor():
         for set_fun in self.all_set_fun:
             set_fun()
 
-class NTC:
-    def __init__(self):
-        
 
 class T_RH_Sensor(Sensor):
     """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
@@ -215,6 +214,66 @@ class MLX90614(Sensor):
             obj_T = value
         return obj_T
 
+class AnalogSensor():
+    FULL_RANGE = 25927
+    def __init__(self):
+        self.pins = (None, None)
+        self.channel = None
+        self.reading = 0 
+        self.total_readings = 30
+
+    def avg_reading(self):
+        value = 0
+        for _ in range(self.total_readings):
+            value = self.channel.value + value
+
+        self.reading = value/self.total_readings
+
+class NTC(AnalogSensor):
+    R1 = 100000
+    A = 0.6991663435*10**-3
+    B = 2.175231274*10**-4
+    C = 0.9757198585*10**-7
+
+    def __init__(self):
+        super().__init__()
+        self.temperature = 0
+
+    def convert_data(self,bits:float):
+        "gets the current temperature using the Steinhart-Hart model"
+        R2 = self.R1*(self.FULL_RANGE/bits-1)
+        logR2 = np.log(R2)
+        T = (1/(self.A + self.B*logR2+self.C*logR2**3))
+
+        self.temperature = T - 273.15
+       
+class ADS1115_(ADS1115):
+    """ ADC reader
+
+    Args:
+        ADS1115 (_type_): _description_
+    """
+    
+    def __init__(self, sensors):
+        self.sensors = sensors
+        self._i2c = board.I2C()
+        self.adc = super().__init__(self._i2c)
+        self.adc.gain = 1
+        self.no_sensors = len(self.sensors)
+        for i,sensor in enumerate(self.sensors):
+            i= i*2
+            sensor.pins = (i, i+1)
+            # To check if we can automate the part of choosing one pin or two
+            sensor.channel = AnalogIn(self.adc,sensor.pins[0],sensor.pins[1])
+
+    def trigger_readings(self):
+        for sensor in self.sensors:
+            sensor.avg_reading()
+
+    def trigger_values(self):
+        for sensor in self.sensors:
+            sensor.convert_data(sensor.reading)
+
 class TCA9548A(adafruit_tca9548a.TCA9548A):
     def __init__(self):
         # All sensors' functions
@@ -317,3 +376,16 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
         print("Cleaning...")
         print("Bye!")
         os._exit(1)
+
+
+if __name__ == "__main__":
+    ntc = NTC()
+    ads=ADS1115_(ntc)
+    print("Reading ADS1X15 values, press Ctrl-C to quit...")
+    print("| {:>6} |".format('NTC'))
+    while True:
+        ads.trigger_readings()
+        ads.trigger_values()
+
+        print("| {:>6.4} |".format(ntc.temperature))
+        time.sleep(0.25)
