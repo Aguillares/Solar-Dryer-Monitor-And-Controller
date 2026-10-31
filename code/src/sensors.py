@@ -85,6 +85,7 @@ class Sensor():
         """triggers all set functions of the sensor"""
         for set_fun in self.all_set_fun:
             set_fun()
+            await asyncio.sleep(0.1)
 
 
 class T_RH_Sensor(Sensor):
@@ -124,6 +125,7 @@ class T_RH_Sensor(Sensor):
         """
 
         self.all_properties_values['T']=round(self.sensor.temperature,2)
+        
         self.avg_prop['T'].append(self.all_properties_values['T'])
         
             
@@ -223,10 +225,11 @@ class AnalogSensor():
         self.reading = 0 
         self.total_readings = 30
 
-    def avg_reading(self):
+    async def avg_reading(self):
         value = 0
         for _ in range(self.total_readings):
             value = self.channel.value + value
+            await asyncio.sleep(0.025)
 
         self.reading = value/self.total_readings
 
@@ -276,16 +279,16 @@ class ADS1115_(ADS1115):
             # To check if we can automate the part of choosing one pin or two
             sensor.channel = AnalogIn(self,sensor.pins[0],sensor.pins[1])
 
-    def trigger_readings(self):
+    async def trigger_readings(self):
         for sensor in self.sensors:
-            sensor.avg_reading()
+            await sensor.avg_reading()
 
     def trigger_values(self):
         for sensor in self.sensors:
             sensor.convert_data(sensor.reading)
     
     async def trigger(self):
-        self.trigger_readings()
+        await self.trigger_readings()
         self.trigger_values()
 
 class TCA9548A(adafruit_tca9548a.TCA9548A):

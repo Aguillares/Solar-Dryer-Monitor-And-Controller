@@ -92,7 +92,7 @@ class SensorsController():
         self.analog_names = ['NTC3950']
         
         self.display_trigger = 5*1    # Each time is taken information.
-        self.average_trigger = 0*60+ 3*5  # Up to this point, all data is averaged.
+        self.average_trigger = 0*60+ 4*5  # Up to this point, all data is averaged.
         # The minimum amount of samples is 80% of what we triggered
         self._minimum_sample = np.ceil((self.average_trigger/self.display_trigger)*0.8) # To have at least 80% of the data.
         # We start with this header and we develop it with _create_header method
@@ -330,4 +330,4 @@ if __name__ == "__main__":
         GPIO.cleanup()
     
         """_summary_
-        """        
+        """         
