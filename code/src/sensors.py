@@ -87,6 +87,80 @@ class Sensor():
             set_fun()
             await asyncio.sleep(0.1)
 
+class PeltierCell:
+
+    def __init__(self):
+        self.pin_definition()
+        self.activate_gpio()
+        self.pwm_setup()
+
+    def pin_definition(self):
+        self.LPWM = 18
+        self.RPWM = 19
+        self.REN = 23
+        self.LEN = 24
+
+    def activate_gpio(self):
+        # GPIO Setup
+        GPIO.setmode(GPIO.BCM)
+        GPIO.setup(self.RPWM,GPIO.OUT)
+        GPIO.setup(self.LPWM,GPIO.OUT)
+        GPIO.setup(self.REN,GPIO.OUT)
+        GPIO.setup(self.LEN,GPIO.OUT)
+
+
+    def pwm_setup(self):
+        # PWM Setup
+        self.frequency = 1000 # PWM frequency in Hz
+        self.rpwm = GPIO.PWM(self.RPWM,self.frequency)
+        self.lpwm = GPIO.PWM(self.LPWM,self.frequency)
+
+        # Start PWM with 0% of duty cycle
+        self.rpwm.start(0)
+        self.lpwm.start(0)
+
+    def decide_section(self,level):
+        if (level)>0:
+            self.warm_up(level)
+        else:
+            self.cool_down(-level)
+    def warm_up(self,level):
+        GPIO.output(self.REN, GPIO.HIGH)
+        GPIO.output(self.LEN, GPIO.LOW)
+
+        self.rpwm.ChangeDutyCycle(level)
+        self.lpwm.ChangeDutyCycle(0)
+
+    def cool_down(self,level):
+        GPIO.output(self.REN, GPIO.LOW)
+        GPIO.output(self.LEN, GPIO.HIGH)
+
+        self.rpwm.ChangeDutyCycle(0)
+        self.lpwm.ChangeDutyCycle(level)
+
+    def _test_fun(self):
+
+        try:
+            while True:
+                self.decide_section(100)
+                time.sleep(5)
+
+                self.decide_section(40)
+                time.sleep(5)
+
+                self.decide_section(-20)
+                time.sleep(5)
+
+                self.decide_section(-80)
+                time.sleep(5)
+        except KeyboardInterrupt:
+            print("Stopping everything")
+
+        finally:
+            self.rpwm.stop()
+            self.lpwm.stop()
+            GPIO.cleanup()
+
 
 class T_RH_Sensor(Sensor):
     """It encompasses both, the BME280 and SHT31 or whichever other sensor that 
@@ -396,12 +470,14 @@ class TCA9548A(adafruit_tca9548a.TCA9548A):
 
 
 if __name__ == "__main__":
-    ntc = NTC()
-    ads=ADS1115_([ntc])
-    print("Reading ADS1X15 values, press Ctrl-C to quit...")
-    print("| {:>6} |".format('NTC'))
-    while True:
-        asyncio.run(ads.trigger())
+    # ntc = NTC()
+    # ads=ADS1115_([ntc])
+    # print("Reading ADS1X15 values, press Ctrl-C to quit...")
+    # print("| {:>6} |".format('NTC'))
+    # while True:
+    #     asyncio.run(ads.trigger())
 
-        print("| {:>6.4} |".format(ntc.temperature))
-        time.sleep(0.25)
+    #     print("| {:>6.4} |".format(ntc.temperature))
+    #     time.sleep(0.25)
+    peltier_cell=PeltierCell()
+    peltier_cell._test_fun()
