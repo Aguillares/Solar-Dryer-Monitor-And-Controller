@@ -53,6 +53,7 @@ class SensorsController():
             print(message,end='\r')
             time.sleep(len(message)*0.065)
             print(" "*len(message),end='\r')
+            
     
     def setup(self):
         """Sets up the environment, checking if there are sensors connected
